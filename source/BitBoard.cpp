@@ -16,7 +16,7 @@ BitBoard::BitBoard() {
     }
 }
 
-Cell BitBoard::get_cell(size_t row, size_t col) {
+Cell BitBoard::get_cell(size_t row, size_t col) const {
     assert(row < SIZE && col < SIZE && "Out of bound");
     return Cell((h_lines[row] >> 2*(SIZE-1 - col)) & 0b11);
 }

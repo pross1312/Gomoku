@@ -1,10 +1,10 @@
 #include "Ui.h"
 #include <cassert>
 
-void render_board(BitBoard *board) {
+void render_board(const BitBoard &board) {
     for (size_t row = 0; row < SIZE; row++) {
         for (size_t col = 0; col < SIZE; col++) {
-            Cell cell = board->get_cell(row, col);
+            Cell cell = board.get_cell(row, col);
             assert(cell != Cell::Out && "Invalid cell");
             if (cell == Cell::White) printf("X");
             else if (cell == Cell::Black) printf("O");

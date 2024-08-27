@@ -52,7 +52,7 @@
 
 #define SIZE 15
 #define DIAG_SIZE (2*SIZE-1)
-#define RADIUS 5 // for get_pieces_radius, must be odd and greater or equal to 3
+#define RADIUS 4 // for get_pieces_radius, must be odd and greater or equal to 3
 
 enum Cell : uint8_t {
     Out = 0b00,
@@ -74,7 +74,7 @@ struct BitBoard {
 
     BitBoard();
 
-    Cell get_cell(size_t row, size_t col);
+    Cell get_cell(size_t row, size_t col) const;
     void set_cell(size_t row, size_t col, Cell cell);
     Line4 get_lines(size_t row, size_t col);
     Line4 get_lines_radius(size_t row, size_t col); // get RADIUS pieces around pos
