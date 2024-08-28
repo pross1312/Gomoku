@@ -36,7 +36,22 @@ ThreatType ThreatDetector::detect(uint32_t line) {
     else if (is_straight_four(cells, figure)) return Threat::StraightFour;
     else if (is_broken_four(cells, figure)) return Threat::BrokenFour;
     else if (is_straight_three(cells, figure)) return Threat::StraightThree;
+    else if (is_broken_three(cells, figure)) return Threat::BrokenThree;
     return Threat::None;
+}
+
+bool ThreatDetector::is_broken_three(std::array<Cell, THREAT_RANGE> &line, Cell figure) {
+    for (size_t i = 0; i < line.size(); i++) {
+        if (line[i] == Cell::None) {
+            line[i] = figure;
+            if (is_broken_four(line, figure)) {
+                line[i] = Cell::None;
+                return true;
+            }
+            line[i] = Cell::None;
+        }
+    }
+    return false;
 }
 
 bool ThreatDetector::is_straight_three(std::array<Cell, THREAT_RANGE> &line, Cell figure) {
