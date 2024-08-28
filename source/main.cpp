@@ -21,15 +21,11 @@ int main() {
         }
     }
     InitWindow(1300, 800, "Gomoku");
+    SetTargetFPS(30);
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(GetColor(0x101010));
-        bool mouse_in = render_board(board);
-        if (mouse_in) {
-            SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
-        } else {
-            SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-        }
+        render_board(board, Rectangle{.x = 0, .y = 0, .width = (float)GetScreenWidth(), .height = (float)GetScreenHeight()});
         EndDrawing();
     }
     CloseWindow();
