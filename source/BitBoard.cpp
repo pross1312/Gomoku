@@ -1,5 +1,6 @@
 #include "BitBoard.h"
 #include <cassert>
+#include <cmath>
 
 BitBoard::BitBoard() {
     for (uint32_t &line : h_lines) line = (1 << 2*SIZE) - 1;
@@ -24,17 +25,21 @@ Cell BitBoard::get_cell(size_t row, size_t col) const {
 void BitBoard::set_cell(size_t row, size_t col, Cell cell) {
     assert(cell != Cell::Out && "Invalid cell");
     assert(row < SIZE && col < SIZE && "Out of bound");
-    static const auto set = [&cell](size_t right_pieces, uint32_t *line) {
-        *line |= (0b11 << 2*right_pieces);
-        *line &= ~(inverse(cell) << 2*right_pieces);
+    static const auto set = [&cell](size_t right_gap, uint32_t *line) {
+        *line |= (0b11 << 2*right_gap);
+        *line &= ~(inverse(cell) << 2*right_gap);
     };
     set(SIZE-1 - col, &h_lines[row]);
     set(SIZE-1 - row, &v_lines[col]);
+
     size_t right_out_gap = row+col < SIZE ? SIZE-1-(row+col) : 0;
-    set(SIZE-1 - col + right_out_gap, &main_d_lines[row+col]);
+    size_t right_pieces = std::min(row, SIZE-1 - col);
+    set(right_pieces + right_out_gap, &main_d_lines[row+col]);
     right_out_gap = row > col ? row - col : 0;
-    set(SIZE-1 - col + right_out_gap, &sub_d_lines[(SIZE-1-col) + row]);
+    right_pieces = std::min(SIZE-1 - col, SIZE-1 - row);
+    set(right_pieces + right_out_gap, &sub_d_lines[(SIZE-1-col) + row]);
 }
+
 
 Line4 BitBoard::get_lines(size_t row, size_t col) const {
     assert(row < SIZE && col < SIZE && "Out of bound");
@@ -58,9 +63,9 @@ Line4 BitBoard::get_lines_radius(size_t row, size_t col) const {
     adjust(col, SIZE-1-col, &result.h);
     adjust(row, SIZE-1-row, &result.v);
     if (row + col < SIZE) result.main_d >>= 2*(SIZE-1-(row+col));
-    adjust(SIZE-1-row, SIZE-1-col, &result.main_d);
+    adjust(std::min(col, SIZE-1 - row), std::min(SIZE-1 - col, row), &result.main_d);
     if (row > col) result.sub_d >>= 2*(row - col);
-    adjust(row, SIZE-1-col, &result.sub_d);
+    adjust(std::min(col, row), std::min(SIZE-1 - col, SIZE-1 - row), &result.sub_d);
     return result;
 }
 
