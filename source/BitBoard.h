@@ -60,6 +60,7 @@ enum Cell : uint8_t {
     White = 0b10,
     None = 0b11,
 };
+struct Coord { size_t row, col; };
 struct Line4 {
     uint32_t h;
     uint32_t v;
@@ -75,9 +76,16 @@ struct BitBoard {
     BitBoard();
 
     Cell get_cell(size_t row, size_t col) const;
+    Cell get_cell(Coord coord) const { return get_cell(coord.row, coord.col); }
+
     void set_cell(size_t row, size_t col, Cell cell);
+    void set_cell(Coord coord, Cell cell) { set_cell(coord.row, coord.col, cell); };
+
     Line4 get_lines(size_t row, size_t col) const;
+    Line4 get_lines(Coord coord) const { return get_lines(coord.row, coord.col); }
+
     Line4 get_lines_radius(size_t row, size_t col) const; // get RADIUS pieces around pos
+    Line4 get_lines_radius(Coord coord) const { return get_lines_radius(coord.row, coord.col); } // get RADIUS pieces around pos
 };
 
 inline Cell inverse(Cell c) { return Cell(0b11 - c); }

@@ -1,5 +1,6 @@
 #pragma once
 #include "BitBoard.h"
+#include <optional>
 #include <raylib.h>
 
 #define CELL_SIZE 50
@@ -11,7 +12,15 @@
 #define BLACK_COLOR BLACK
 #define MOUSE_IN_BLACK_COLOR BLACK
 
-void render_board(const BitBoard &board, const Rectangle rec);
-void render_white(Rectangle box, bool mouse_in);
-void render_black(Rectangle box, bool mouse_in);
-void render_line(uint32_t line);
+struct Ui {
+    Rectangle bound;
+    Ui() = default;
+    Ui(Rectangle bound): bound(bound) {}
+
+    void render_board(BitBoard &board);
+    void render_white(Rectangle box, bool mouse_in);
+    void render_black(Rectangle box, bool mouse_in);
+    void render_line(uint32_t line);
+
+    std::optional<Coord> get_cell_at_pos(Vector2 pos);
+};
