@@ -3,6 +3,10 @@
 #include <cmath>
 
 BitBoard::BitBoard() {
+    clear();
+}
+
+void BitBoard::clear() {
     for (uint32_t &line : h_lines) line = (1 << 2*SIZE) - 1;
     for (uint32_t &line : v_lines) line = (1 << 2*SIZE) - 1;
     for (size_t i = 1; i <= SIZE; i++) {

@@ -75,6 +75,8 @@ struct BitBoard {
 
     BitBoard();
 
+    void clear();
+
     Cell get_cell(size_t row, size_t col) const;
     Cell get_cell(Coord coord) const { return get_cell(coord.row, coord.col); }
 
