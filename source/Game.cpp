@@ -41,7 +41,6 @@ void Game::run() {
         if (coord.has_value() && board.get_cell(coord.value()) == Cell::None && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             add_move(coord.value());
 
-            switch_turn();
             if (check_win(coord.value())) {
                 TraceLog(LOG_INFO, "Player %s win!!!", turn == Turn::White ? "White" : "Black");
                 restart();

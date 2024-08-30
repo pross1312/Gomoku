@@ -58,7 +58,7 @@ uint32_t ThreatDetector::atk_value(ThreatType threat) {
 uint32_t ThreatDetector::def_value(ThreatType threat) {
     switch (threat) {
         case Threat::None: return 0;
-        case Threat::Two: return 1;
+        case Threat::Two: return 10;
         case Threat::BrokenThree: return 60;
         case Threat::StraightThree: return 70;
         case Threat::BrokenFour: return 110;
@@ -70,7 +70,7 @@ uint32_t ThreatDetector::def_value(ThreatType threat) {
 }
 
 uint32_t ThreatDetector::threshold() {
-    return 50;
+    return 9;
 }
 
 bool ThreatDetector::is_two(std::array<Cell, THREAT_RANGE> &line, Cell figure) {

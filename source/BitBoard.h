@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <cstdio>
+#include <array>
 
 // 15x15
 // 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
@@ -69,10 +70,10 @@ struct Line4 {
     uint32_t sub_d;
 };
 struct BitBoard {
-    uint32_t h_lines[SIZE];
-    uint32_t v_lines[SIZE];
-    uint32_t main_d_lines[DIAG_SIZE];
-    uint32_t sub_d_lines[DIAG_SIZE];
+    std::array<uint32_t, SIZE> h_lines;
+    std::array<uint32_t, SIZE> v_lines;
+    std::array<uint32_t, DIAG_SIZE> main_d_lines;
+    std::array<uint32_t, DIAG_SIZE> sub_d_lines;
 
     BitBoard();
 
