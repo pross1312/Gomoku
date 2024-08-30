@@ -6,15 +6,16 @@
 #define THREAT_RANGE (RADIUS*2+1)
 #define CACHE_SIZE (1<<(2*THREAT_RANGE))
 
-typedef uint32_t ThreatType;
+typedef uint8_t ThreatType;
 struct Threat {
     enum : ThreatType {
         None = 0,
-        BrokenThree = 5,
-        StraightThree = 10,
-        BrokenFour = 50,
-        StraightFour = 100,
-        StraightFive = 1000,
+        Two,
+        BrokenThree,
+        StraightThree,
+        BrokenFour,
+        StraightFour,
+        StraightFive,
     };
     static const char* to_text(ThreatType threat) {
         switch (threat) {
@@ -40,6 +41,11 @@ struct ThreatDetector {
     static ThreatType detect(uint32_t line);
     static ThreatType check(uint32_t line);
 
+    static uint32_t atk_value(ThreatType threat);
+    static uint32_t def_value(ThreatType threat);
+    static uint32_t threshold();
+
+    static bool is_two(std::array<Cell, THREAT_RANGE> &line, Cell figure);
     static bool is_broken_three(std::array<Cell, THREAT_RANGE> &line, Cell figure);
     static bool is_straight_three(std::array<Cell, THREAT_RANGE> &line, Cell figure);
     static bool is_straight_five(std::array<Cell, THREAT_RANGE> &line, Cell figure);

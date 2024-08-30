@@ -92,6 +92,6 @@ std::optional<Coord> Ui::get_cell_at_pos(Vector2 pos) {
         .height = square_size - padding,
     };
     bool mouse_in_cell = pos.x > rec.x && pos.x < rec.x + rec.width && pos.y > rec.y && pos.y < rec.y + rec.height;
-    if (mouse_in_cell) return Coord{.row = row, .col = col};
+    if (mouse_in_cell) return Coord{.row = (size_t)row, .col = (size_t)col};
     return std::nullopt;
 }

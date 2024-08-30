@@ -60,6 +60,7 @@ enum Cell : uint8_t {
     White = 0b10,
     None = 0b11,
 };
+#define OPPOSITE_FIG(_cell) ((_cell) == Cell::White ? Cell::Black : Cell::White)
 struct Coord { size_t row, col; };
 struct Line4 {
     uint32_t h;
@@ -89,5 +90,3 @@ struct BitBoard {
     Line4 get_lines_radius(size_t row, size_t col) const; // get RADIUS pieces around pos
     Line4 get_lines_radius(Coord coord) const { return get_lines_radius(coord.row, coord.col); } // get RADIUS pieces around pos
 };
-
-inline Cell inverse(Cell c) { return Cell(0b11 - c); }

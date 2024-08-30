@@ -17,7 +17,7 @@ int main() {
     SetWindowMinSize(100, 100);
     SetTargetFPS(30);
 
-    Game game;
+    Game game(Game::Mode::Bot);
 
     game.run();
 

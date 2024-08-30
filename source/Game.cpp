@@ -2,7 +2,9 @@
 #include "ThreatDetector.h"
 #include <cassert>
 
-Game::Game(): turn(Turn::White), ui(Rectangle{ .x = 0, .y = 0, .width = (float)GetScreenWidth(), .height = (float)GetScreenHeight() }) {
+Game::Game(Mode mode):
+    mode(mode), turn(Turn::White),
+    ui(Rectangle{ .x = 0, .y = 0, .width = (float)GetScreenWidth(), .height = (float)GetScreenHeight() }) {
 }
 
 void Game::run() {
@@ -26,17 +28,33 @@ void Game::run() {
         } else {
             SetMouseCursor(MOUSE_CURSOR_DEFAULT);
         }
+
+        // static const auto print_value = [this](Coord move) {
+        //     Line4 lines = board.get_lines_radius(move);
+        //     TraceLog(LOG_INFO, "[%s, %s, %s, %s]",
+        //             Threat::to_text(ThreatDetector::check(lines.h)),
+        //             Threat::to_text(ThreatDetector::check(lines.v)),
+        //             Threat::to_text(ThreatDetector::check(lines.main_d)),
+        //             Threat::to_text(ThreatDetector::check(lines.sub_d)));
+        // };
+
         if (coord.has_value() && board.get_cell(coord.value()) == Cell::None && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             add_move(coord.value());
 
-            Line4 lines = board.get_lines_radius(coord.value());
-            TraceLog(LOG_INFO, "[%s, %s, %s, %s]",
-                    Threat::to_text(ThreatDetector::check(lines.h)),
-                    Threat::to_text(ThreatDetector::check(lines.v)),
-                    Threat::to_text(ThreatDetector::check(lines.main_d)),
-                    Threat::to_text(ThreatDetector::check(lines.sub_d)));
-
+            switch_turn();
             if (check_win(coord.value())) {
+                TraceLog(LOG_INFO, "Player %s win!!!", turn == Turn::White ? "White" : "Black");
+                restart();
+            } else {
+                switch_turn();
+            }
+        }
+
+        if (turn == Turn::White && mode == Mode::Bot) {
+            Coord move = engine.next_move(this);
+            add_move(move);
+
+            if (check_win(move)) {
                 TraceLog(LOG_INFO, "Player %s win!!!", turn == Turn::White ? "White" : "Black");
                 restart();
             } else {
@@ -69,7 +87,19 @@ void Game::add_move(Coord pos) {
     }
 }
 
-bool Game::check_win(Coord pos) {
+void Game::pop_last_move() {
+    if (moves_count() == 0) return;
+    // White always moves first so white_moves.size() >= black_moves.size()
+    if (white_moves.size() > black_moves.size()) {
+        board.set_cell(white_moves.back(), Cell::None);
+        white_moves.pop_back();
+    } else {
+        board.set_cell(black_moves.back(), Cell::None);
+        black_moves.pop_back();
+    }
+}
+
+bool Game::check_win(Coord pos) const {
     Line4 lines = board.get_lines_radius(pos);
     return ThreatDetector::check(lines.h)      == Threat::StraightFive ||
            ThreatDetector::check(lines.v)      == Threat::StraightFive ||

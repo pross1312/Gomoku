@@ -37,7 +37,54 @@ ThreatType ThreatDetector::detect(uint32_t line) {
     else if (is_broken_four(cells, figure)) return Threat::BrokenFour;
     else if (is_straight_three(cells, figure)) return Threat::StraightThree;
     else if (is_broken_three(cells, figure)) return Threat::BrokenThree;
+    else if (is_two(cells, figure)) return Threat::Two;
     return Threat::None;
+}
+
+uint32_t ThreatDetector::atk_value(ThreatType threat) {
+    switch (threat) {
+        case Threat::None: return 0;
+        case Threat::Two: return 5;
+        case Threat::BrokenThree: return 60;
+        case Threat::StraightThree: return 100;
+        case Threat::BrokenFour: return 110;
+        case Threat::StraightFour: return 1000;
+        case Threat::StraightFive: return 10000;
+        default: assert(false && "Unknown threat");
+    }
+    return 0;
+}
+
+uint32_t ThreatDetector::def_value(ThreatType threat) {
+    switch (threat) {
+        case Threat::None: return 0;
+        case Threat::Two: return 1;
+        case Threat::BrokenThree: return 60;
+        case Threat::StraightThree: return 70;
+        case Threat::BrokenFour: return 110;
+        case Threat::StraightFour: return 500;
+        case Threat::StraightFive: return 5000;
+        default: assert(false && "Unknown threat");
+    }
+    return 0;
+}
+
+uint32_t ThreatDetector::threshold() {
+    return 50;
+}
+
+bool ThreatDetector::is_two(std::array<Cell, THREAT_RANGE> &line, Cell figure) {
+    for (size_t i = 1; i < line.size()-1; i++) {
+        if (line[i] == Cell::None) {
+            line[i] = figure;
+            if (is_straight_three(line, figure) || is_broken_three(line, figure)) {
+                line[i] = Cell::None;
+                return true;
+            }
+            line[i] = Cell::None;
+        }
+    }
+    return false;
 }
 
 bool ThreatDetector::is_broken_three(std::array<Cell, THREAT_RANGE> &line, Cell figure) {

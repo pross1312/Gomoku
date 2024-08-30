@@ -29,19 +29,19 @@ Cell BitBoard::get_cell(size_t row, size_t col) const {
 void BitBoard::set_cell(size_t row, size_t col, Cell cell) {
     assert(cell != Cell::Out && "Invalid cell");
     assert(row < SIZE && col < SIZE && "Out of bound");
-    static const auto set = [&cell](size_t right_gap, uint32_t *line) {
+    static const auto set = [](size_t right_gap, uint32_t *line, Cell c) {
         *line |= (0b11 << 2*right_gap);
-        *line &= ~(inverse(cell) << 2*right_gap);
+        *line &= ~((~(c) & 0b11) << 2*right_gap);
     };
-    set(SIZE-1 - col, &h_lines[row]);
-    set(SIZE-1 - row, &v_lines[col]);
+    set(SIZE-1 - col, &h_lines[row], cell);
+    set(SIZE-1 - row, &v_lines[col], cell);
 
     size_t right_out_gap = row+col < SIZE ? SIZE-1-(row+col) : 0;
     size_t right_pieces = std::min(row, SIZE-1 - col);
-    set(right_pieces + right_out_gap, &main_d_lines[row+col]);
+    set(right_pieces + right_out_gap, &main_d_lines[row+col], cell);
     right_out_gap = row > col ? row - col : 0;
     right_pieces = std::min(SIZE-1 - col, SIZE-1 - row);
-    set(right_pieces + right_out_gap, &sub_d_lines[(SIZE-1-col) + row]);
+    set(right_pieces + right_out_gap, &sub_d_lines[(SIZE-1-col) + row], cell);
 }
 
 
@@ -58,7 +58,7 @@ Line4 BitBoard::get_lines(size_t row, size_t col) const {
 // (row, col) at center RADIUS*2 bits in total
 Line4 BitBoard::get_lines_radius(size_t row, size_t col) const {
     Line4 result = get_lines(row, col);
-    static const auto adjust = [&](size_t left_pieces, size_t right_pieces, uint32_t *line) {
+    static const auto adjust = [](size_t left_pieces, size_t right_pieces, uint32_t *line) {
         if (left_pieces > RADIUS)  *line &=  (1 << (right_pieces + 1 + RADIUS)*2) - 1;
         if (right_pieces < RADIUS) *line <<= (RADIUS - right_pieces)*2;
         else                     *line >>= (right_pieces - RADIUS)*2; // left + 1 + right - (left + 1 + RADIUS)
