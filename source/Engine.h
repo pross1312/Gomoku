@@ -18,6 +18,6 @@ struct Engine {
 
     Coord next_move(Game* game);
     std::pair<Coord, uint32_t> search(size_t depth, size_t max_depth);
-    uint32_t move_value(Coord pos, Cell atk_fig);
+    uint32_t move_value(Coord pos, Figure atk_fig);
     MoveList get_move_list();
 };

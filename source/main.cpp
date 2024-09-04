@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "OperationDetector.h"
 #include <raylib.h>
 #include <ctime>
 #include <cstdlib>
@@ -17,7 +18,7 @@ int main() {
     SetWindowMinSize(100, 100);
     SetTargetFPS(30);
 
-    Game game(Game::Mode::Bot);
+    Game game(Game::Mode::Custom);
 
     game.run();
 

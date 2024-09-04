@@ -45,10 +45,10 @@ struct ThreatDetector {
     static uint32_t def_value(ThreatType threat);
     static uint32_t threshold();
 
-    static bool is_two(std::array<Cell, THREAT_RANGE> &line, Cell figure);
-    static bool is_broken_three(std::array<Cell, THREAT_RANGE> &line, Cell figure);
-    static bool is_straight_three(std::array<Cell, THREAT_RANGE> &line, Cell figure);
-    static bool is_straight_five(std::array<Cell, THREAT_RANGE> &line, Cell figure);
-    static bool is_straight_four(std::array<Cell, THREAT_RANGE> &line, Cell figure);
-    static bool is_broken_four(std::array<Cell, THREAT_RANGE> &line, Cell figure);
+    static bool is_two(std::array<Figure, THREAT_RANGE> &line, Figure figure);
+    static bool is_broken_three(std::array<Figure, THREAT_RANGE> &line, Figure figure);
+    static bool is_straight_three(std::array<Figure, THREAT_RANGE> &line, Figure figure);
+    static bool is_straight_five(std::array<Figure, THREAT_RANGE> &line, Figure figure);
+    static bool is_straight_four(std::array<Figure, THREAT_RANGE> &line, Figure figure);
+    static bool is_broken_four(std::array<Figure, THREAT_RANGE> &line, Figure figure);
 };

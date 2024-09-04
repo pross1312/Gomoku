@@ -21,15 +21,15 @@ void BitBoard::clear() {
     }
 }
 
-Cell BitBoard::get_cell(size_t row, size_t col) const {
+Figure BitBoard::get_cell(size_t row, size_t col) const {
     assert(row < SIZE && col < SIZE && "Out of bound");
-    return Cell((h_lines[row] >> 2*(SIZE-1 - col)) & 0b11);
+    return Figure((h_lines[row] >> 2*(SIZE-1 - col)) & 0b11);
 }
 
-void BitBoard::set_cell(size_t row, size_t col, Cell cell) {
-    assert(cell != Cell::Out && "Invalid cell");
+void BitBoard::set_cell(size_t row, size_t col, Figure cell) {
+    assert(cell != Figure::Out && "Invalid cell");
     assert(row < SIZE && col < SIZE && "Out of bound");
-    static const auto set = [](size_t right_gap, uint32_t *line, Cell c) {
+    static const auto set = [](size_t right_gap, uint32_t *line, Figure c) {
         *line |= (0b11 << 2*right_gap);
         *line &= ~((~(c) & 0b11) << 2*right_gap);
     };

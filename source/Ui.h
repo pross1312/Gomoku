@@ -17,7 +17,7 @@ struct Ui {
     Ui() = default;
     Ui(Rectangle bound): bound(bound) {}
 
-    void render_board(BitBoard &board);
+    void render_board(const BitBoard &board);
     void render_white(Rectangle box, bool mouse_in);
     void render_black(Rectangle box, bool mouse_in);
     void render_line(uint32_t line);
