@@ -10,12 +10,12 @@ Game::Game(Mode mode):
 void Game::run() {
     while (!WindowShouldClose()) {
         if (IsWindowResized()) {
-            ui.bound = Rectangle {
+            ui.set_bound(Rectangle {
                 .x = 0,
                 .y = 0,
                 .width = (float)GetScreenWidth(),
                 .height = (float)GetScreenHeight()
-            };
+            });
         }
         BeginDrawing();
 

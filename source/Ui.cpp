@@ -3,19 +3,41 @@
 #include <cmath>
 #include <cassert>
 
+void Ui::set_bound(Rectangle new_bound) {
+    bound = new_bound;
+    square_size = std::min(bound.width, bound.height)/(SIZE + 1);
+    board_bound.x = bound.x + bound.width/2.0f - (SIZE*square_size)/2.0f - square_size*0.5f;
+    board_bound.y = bound.y + bound.height/2.0f - (SIZE*square_size)/2.0f - square_size*0.5f;
+    board_bound.width = square_size * SIZE;
+    board_bound.height = square_size * SIZE;
+    padding = square_size/10.0f;
+}
+
 void Ui::render_board(const BitBoard &board) {
-    const float square_size = std::min(bound.width, bound.height)/SIZE;
-    const float padding = square_size/10.0f;
+    Vector2 mouse = GetMousePosition();
+    for (size_t i = 0; i < SIZE; i++) {
+        const char* text = TextFormat("%zu", i);
+        int text_w = MeasureText(text, font_size);
+        Color row_color = i == (size_t)((mouse.y - board_bound.y)/square_size) ? TEXT_HIGHLIGHT_COLOR : TEXT_COLOR;
+        Color col_color = i == (size_t)((mouse.x - board_bound.x)/square_size) ? TEXT_HIGHLIGHT_COLOR : TEXT_COLOR;
+        DrawText(text,
+                 board_bound.x + SIZE*square_size + square_size*0.5f - text_w*0.5f,
+                 board_bound.y + i*square_size + square_size*0.5f - font_size*0.5f,
+                 font_size, row_color);
+        DrawText(text,
+                 board_bound.x + i*square_size + square_size*0.5f - text_w*0.5f,
+                 board_bound.y + SIZE*square_size + square_size*0.5f - font_size*0.5f,
+                 font_size, col_color);
+    }
     for (size_t row = 0; row < SIZE; row++) {
         for (size_t col = 0; col < SIZE; col++) {
             Rectangle rec {
-                .x = bound.x + bound.width/2.0f - (SIZE*square_size)/2.0f + col*square_size + padding,
-                .y = bound.y + bound.height/2.0f - (SIZE*square_size)/2.0f + row*square_size + padding,
+                .x = board_bound.x + col*square_size + padding,
+                .y = board_bound.y + row*square_size + padding,
                 .width = square_size - padding,
                 .height = square_size - padding,
             };
             Figure cell = board.get_cell(row, col);
-            Vector2 mouse = GetMousePosition();
             bool mouse_in_cell = mouse.x > rec.x && mouse.x < rec.x + rec.width && mouse.y > rec.y && mouse.y < rec.y + rec.height;
             if (mouse_in_cell && cell == Figure::None) {
                 DrawRectangleRec(rec, MOUSE_IN_EMPTY_COLOR);
@@ -74,11 +96,9 @@ void Ui::render_line(uint32_t line) {
 }
 
 std::optional<Coord> Ui::get_cell_at_pos(Vector2 pos) {
-    const float square_size = std::min(bound.width, bound.height)/SIZE;
-    const float padding = square_size/10.0f;
     Rectangle real_bound {
-        .x = bound.x + bound.width/2.0f - (SIZE*square_size)/2.0f,
-        .y = bound.y + bound.height/2.0f - (SIZE*square_size)/2.0f,
+        .x = board_bound.x,
+        .y = board_bound.y,
         .width = square_size*SIZE,
         .height = square_size*SIZE,
     };

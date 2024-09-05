@@ -11,11 +11,23 @@
 #define MOUSE_IN_WHITE_COLOR WHITE
 #define BLACK_COLOR BLACK
 #define MOUSE_IN_BLACK_COLOR BLACK
+#define TEXT_HIGHLIGHT_COLOR YELLOW
+#define TEXT_COLOR WHITE
 
 struct Ui {
+private:
     Rectangle bound;
+    Rectangle board_bound;
+    float square_size;
+    float padding;
+
+public:
+    float font_size = 30;
+
     Ui() = default;
-    Ui(Rectangle bound): bound(bound) {}
+    Ui(Rectangle bound) { set_bound(bound); }
+
+    void set_bound(Rectangle new_bound);
 
     void render_board(const BitBoard &board);
     void render_white(Rectangle box, bool mouse_in);
