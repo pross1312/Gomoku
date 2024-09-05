@@ -22,17 +22,52 @@ void Game::run() {
         ClearBackground(GetColor(0x101010));
         ui.render_board(board);
 
+        static const auto print_value = [this](Coord move) {
+            Line4 lines = board.get_lines_radius(move);
+            TraceLog(LOG_INFO, "[%s, %s, %s, %s]",
+                    Threat::to_text(ThreatDetector::check(lines[HORIZONTAL])),
+                    Threat::to_text(ThreatDetector::check(lines[VERTICAL])),
+                    Threat::to_text(ThreatDetector::check(lines[DIAGONAL])),
+                    Threat::to_text(ThreatDetector::check(lines[SUBDIAGONAL])));
+        };
+
+
         if (mode == Game::Mode::Custom) {
+            if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE)) {
+                auto opt_fig = ui.get_cell_at_pos(GetMousePosition());
+                if (opt_fig.has_value()) {
+                    print_value(opt_fig.value());
+                }
+            }
             if (IsKeyPressed(KEY_BACKSPACE) && moves_count() > 0) {
                 pop_last_move();
             } else if (IsKeyPressed(KEY_SPACE)) {
-                op_detector.get_operations(&board, Figure::White);
+                op_detector.find_operations(&board, Figure::White);
+                TraceLog(LOG_INFO, "White");
+                for (Operation op : op_detector.ops) {
+                    LOG_OP(op);
+                }
+                TraceLog(LOG_INFO, "Black");
+                op_detector.find_operations(&board, Figure::Black);
+                for (Operation op : op_detector.ops) {
+                    LOG_OP(op);
+                }
             }
         }
 
         auto opt_move = get_next_move();
         if (opt_move.has_value()) {
-            add_move(opt_move.value());
+            if (mode == Game::Mode::Custom) {
+                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    turn = Turn::White;
+                    add_move(opt_move.value());
+                } else {
+                    turn = Turn::Black;
+                    add_move(opt_move.value());
+                }
+            } else {
+                add_move(opt_move.value());
+            }
             if (mode == Game::Mode::Bot || mode == Game::Mode::Pvp) {
                 if (check_win(opt_move.value())) {
                     TraceLog(LOG_INFO, "Player %s win!!!", turn == Turn::White ? "White" : "Black");
@@ -43,26 +78,15 @@ void Game::run() {
                 } else {
                     switch_turn();
                 }
-            } else {
-                switch_turn();
             }
         }
 
         // auto coord = ui.get_cell_at_pos(GetMousePosition());
-        // if (coord.has_value() && board.get_cell(coord.value()) == Figure::None) {
+        // if (coord[HORIZONTAL]as_value() && board.get_cell(coord.value()) == Figure::None) {
         //     SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
         // } else {
         //     SetMouseCursor(MOUSE_CURSOR_DEFAULT);
         // }
-
-        // static const auto print_value = [this](Coord move) {
-        //     Line4 lines = board.get_lines_radius(move);
-        //     TraceLog(LOG_INFO, "[%s, %s, %s, %s]",
-        //             Threat::to_text(ThreatDetector::check(lines.h)),
-        //             Threat::to_text(ThreatDetector::check(lines.v)),
-        //             Threat::to_text(ThreatDetector::check(lines.main_d)),
-        //             Threat::to_text(ThreatDetector::check(lines.sub_d)));
-        // };
 
         EndDrawing();
     }
@@ -80,8 +104,13 @@ std::optional<Coord> Game::get_next_move() {
                 result = std::nullopt;
             }
             break;
-        case Game::Mode::Pvp: case Game::Mode::Custom:
+        case Game::Mode::Pvp:
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                result = ui.get_cell_at_pos(GetMousePosition());
+            }
+            break;
+        case Game::Mode::Custom:
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
                 result = ui.get_cell_at_pos(GetMousePosition());
             }
             break;
@@ -93,6 +122,8 @@ void Game::restart() {
     board.clear();
     white_moves.clear();
     black_moves.clear();
+    op_detector.white_moves.clear();
+    op_detector.black_moves.clear();
     turn = Turn::White;
 }
 
@@ -128,8 +159,8 @@ void Game::pop_last_move() {
 
 bool Game::check_win(Coord pos) const {
     Line4 lines = board.get_lines_radius(pos);
-    return ThreatDetector::check(lines.h)      == Threat::StraightFive ||
-           ThreatDetector::check(lines.v)      == Threat::StraightFive ||
-           ThreatDetector::check(lines.main_d) == Threat::StraightFive ||
-           ThreatDetector::check(lines.sub_d)  == Threat::StraightFive;
+    return ThreatDetector::check(lines[HORIZONTAL])      == Threat::StraightFive ||
+           ThreatDetector::check(lines[VERTICAL])      == Threat::StraightFive ||
+           ThreatDetector::check(lines[DIAGONAL]) == Threat::StraightFive ||
+           ThreatDetector::check(lines[SUBDIAGONAL])  == Threat::StraightFive;
 }

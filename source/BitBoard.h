@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <array>
+#include <raylib.h>
 
 // 15x15
 // 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
@@ -61,8 +62,13 @@ enum Figure : uint8_t {
     White = 0b10,
     None = 0b11,
 };
+#define IS_PIECE(figure) ((figure) != Figure::None && (figure) != Figure::Out)
 #define OPPOSITE_FIG(_cell) ((_cell) == Figure::White ? Figure::Black : Figure::White)
 #define INVALID_COORD (Coord{})
+#define COORD_FORMAT "(%d, %d)"
+#define FORMAT_COORD(coord) (coord).row, (coord).col
+#define LOG_COORD(c) TraceLog(LOG_INFO, COORD_FORMAT, FORMAT_COORD(c))
+
 struct Coord {
     int8_t row, col;
     Coord(): row{-1}, col{-1} {}
@@ -85,17 +91,28 @@ struct Coord {
     }
 };
 
-struct Line4 {
-    uint32_t h;
-    uint32_t v;
-    uint32_t main_d;
-    uint32_t sub_d;
+typedef uint32_t Line;
+typedef std::array<Line, 4> Line4;
+typedef size_t Direction;
+enum : size_t {
+    HORIZONTAL = 0,
+    VERTICAL,
+    DIAGONAL,
+    SUBDIAGONAL,
+    DIR_COUNT,
 };
+const Coord DIR_VECS[DIR_COUNT] {
+    [HORIZONTAL] = Coord(0, 1),
+    [VERTICAL] = Coord(1, 0),
+    [DIAGONAL] = Coord(1, -1),
+    [SUBDIAGONAL] = Coord(1, 1),
+};
+
 struct BitBoard {
-    std::array<uint32_t, SIZE> h_lines;
-    std::array<uint32_t, SIZE> v_lines;
-    std::array<uint32_t, DIAG_SIZE> main_d_lines;
-    std::array<uint32_t, DIAG_SIZE> sub_d_lines;
+    std::array<Line, SIZE> h_lines;
+    std::array<Line, SIZE> v_lines;
+    std::array<Line, DIAG_SIZE> main_d_lines;
+    std::array<Line, DIAG_SIZE> sub_d_lines;
 
     BitBoard();
 
@@ -107,9 +124,12 @@ struct BitBoard {
     void set_cell(size_t row, size_t col, Figure cell);
     void set_cell(Coord coord, Figure cell) { set_cell((size_t)coord.row, (size_t)coord.col, cell); };
 
+    Line get_line(size_t row, size_t col, Direction dir) const;
     Line4 get_lines(size_t row, size_t col) const;
     Line4 get_lines(Coord coord) const { return get_lines((size_t)coord.row, (size_t)coord.col); }
 
+    Line get_line_radius(size_t row, size_t col, Direction dir) const;
+    Line get_line_radius(Coord coord, Direction dir) const { return get_line_radius(coord.row, coord.col, dir); }
     Line4 get_lines_radius(size_t row, size_t col) const; // get RADIUS pieces around pos
     Line4 get_lines_radius(Coord coord) const { return get_lines_radius((size_t)coord.row, (size_t)coord.col); } // get RADIUS pieces around pos
 };

@@ -10,7 +10,8 @@ typedef uint8_t ThreatType;
 struct Threat {
     enum : ThreatType {
         None = 0,
-        Two,
+        BrokenTwo,
+        StraightTwo,
         BrokenThree,
         StraightThree,
         BrokenFour,
@@ -20,13 +21,15 @@ struct Threat {
     static const char* to_text(ThreatType threat) {
         switch (threat) {
             case Threat::None: return "None";
+            case Threat::BrokenTwo: return "BrokenTwo";
+            case Threat::StraightTwo: return "StraightTwo";
             case Threat::BrokenThree: return "BrokenThree";
             case Threat::StraightThree: return "StraightThree";
             case Threat::BrokenFour: return "BrokenFour";
             case Threat::StraightFour: return "StraightFour";
             case Threat::StraightFive: return "StraightFive";
-            default: assert(false && "Unknown threat");
         }
+        assert(false && "Unknown threat");
     }
 };
 
@@ -45,10 +48,11 @@ struct ThreatDetector {
     static uint32_t def_value(ThreatType threat);
     static uint32_t threshold();
 
-    static bool is_two(std::array<Figure, THREAT_RANGE> &line, Figure figure);
+    static bool is_broken_two(std::array<Figure, THREAT_RANGE> &line, Figure figure);
     static bool is_broken_three(std::array<Figure, THREAT_RANGE> &line, Figure figure);
-    static bool is_straight_three(std::array<Figure, THREAT_RANGE> &line, Figure figure);
-    static bool is_straight_five(std::array<Figure, THREAT_RANGE> &line, Figure figure);
-    static bool is_straight_four(std::array<Figure, THREAT_RANGE> &line, Figure figure);
     static bool is_broken_four(std::array<Figure, THREAT_RANGE> &line, Figure figure);
+    static bool is_straight_two(std::array<Figure, THREAT_RANGE> &line, Figure figure);
+    static bool is_straight_three(std::array<Figure, THREAT_RANGE> &line, Figure figure);
+    static bool is_straight_four(std::array<Figure, THREAT_RANGE> &line, Figure figure);
+    static bool is_straight_five(std::array<Figure, THREAT_RANGE> &line, Figure figure);
 };

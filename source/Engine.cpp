@@ -65,14 +65,14 @@ uint32_t Engine::move_value(Coord pos, Figure atk_fig) {
     game->board.set_cell(pos, def_fig);
     Line4 def_lines = game->board.get_lines_radius(pos);
     game->board.set_cell(pos, old_fig);
-    return ThreatDetector::atk_value(ThreatDetector::check(atk_lines.h))      +
-           ThreatDetector::atk_value(ThreatDetector::check(atk_lines.v))      +
-           ThreatDetector::atk_value(ThreatDetector::check(atk_lines.main_d)) +
-           ThreatDetector::atk_value(ThreatDetector::check(atk_lines.sub_d))  +
-           ThreatDetector::def_value(ThreatDetector::check(def_lines.h))      +
-           ThreatDetector::def_value(ThreatDetector::check(def_lines.v))      +
-           ThreatDetector::def_value(ThreatDetector::check(def_lines.main_d)) +
-           ThreatDetector::def_value(ThreatDetector::check(def_lines.sub_d));
+    return ThreatDetector::atk_value(ThreatDetector::check(atk_lines[HORIZONTAL]))      +
+           ThreatDetector::atk_value(ThreatDetector::check(atk_lines[VERTICAL]))      +
+           ThreatDetector::atk_value(ThreatDetector::check(atk_lines[DIAGONAL])) +
+           ThreatDetector::atk_value(ThreatDetector::check(atk_lines[SUBDIAGONAL]))  +
+           ThreatDetector::def_value(ThreatDetector::check(def_lines[HORIZONTAL]))      +
+           ThreatDetector::def_value(ThreatDetector::check(def_lines[VERTICAL]))      +
+           ThreatDetector::def_value(ThreatDetector::check(def_lines[DIAGONAL])) +
+           ThreatDetector::def_value(ThreatDetector::check(def_lines[SUBDIAGONAL]));
 }
 
 MoveList Engine::get_move_list() {
