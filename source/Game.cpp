@@ -42,16 +42,23 @@ void Game::run() {
             if (IsKeyPressed(KEY_BACKSPACE) && moves_count() > 0) {
                 pop_last_move();
             } else if (IsKeyPressed(KEY_SPACE)) {
-                op_detector.find_operations(&board, Figure::White);
-                TraceLog(LOG_INFO, "White");
-                for (Operation op : op_detector.ops) {
-                    LOG_OP(op);
-                }
-                TraceLog(LOG_INFO, "Black");
-                op_detector.find_operations(&board, Figure::Black);
-                for (Operation op : op_detector.ops) {
-                    LOG_OP(op);
-                }
+                // if (moves_count() > 0) {
+                //     for (auto op : detector.find_operations(&board, white_moves.back())) {
+                //         LOG_OP(op);
+                //     }
+                // }
+                if (moves_count() > 0) searcher.search(&board, white_moves.back());
+
+                // op_detector.find_operations(white_moves, &board);
+                // TraceLog(LOG_INFO, "White");
+                // for (Operation op : op_detector.ops) {
+                //     LOG_OP(op);
+                // }
+                // TraceLog(LOG_INFO, "Black");
+                // op_detector.find_operations(black_moves, &board);
+                // for (Operation op : op_detector.ops) {
+                //     LOG_OP(op);
+                // }
             }
         }
 
@@ -122,8 +129,6 @@ void Game::restart() {
     board.clear();
     white_moves.clear();
     black_moves.clear();
-    op_detector.white_moves.clear();
-    op_detector.black_moves.clear();
     turn = Turn::White;
 }
 
@@ -135,11 +140,9 @@ void Game::add_move(Coord pos) {
     if (turn == Turn::White) {
         board.set_cell(pos, Figure::White);
         white_moves.push_back(pos);
-        op_detector.white_moves.push_back(pos);
     } else {
         board.set_cell(pos, Figure::Black);
         black_moves.push_back(pos);
-        op_detector.black_moves.push_back(pos);
     }
 }
 
@@ -148,12 +151,10 @@ void Game::pop_last_move() {
     // White always moves first so white_moves.size() >= black_moves.size()
     if (white_moves.size() > black_moves.size()) {
         board.set_cell(white_moves.back(), Figure::None);
-        op_detector.white_moves.pop_back();
         white_moves.pop_back();
     } else {
         board.set_cell(black_moves.back(), Figure::None);
         black_moves.pop_back();
-        op_detector.black_moves.pop_back();
     }
 }
 

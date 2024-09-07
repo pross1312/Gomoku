@@ -76,7 +76,8 @@ struct Coord {
     bool operator==(Coord c) const {
         return row == c.row && col == c.col;
     }
-    bool is_valid() { return row >= 0 && row < SIZE && col >= 0 && col < SIZE; }
+    bool is_valid() const { return row >= 0 && row < SIZE && col >= 0 && col < SIZE; }
+    Coord operator*(int8_t x) const { return Coord(row*x, col*x); }
     Coord operator+(const Coord& b) const { return Coord(row + b.row, col + b.col); }
     Coord operator-(const Coord& b) const { return Coord(row - b.row, col - b.col); }
     Coord& operator+=(const Coord& b) {

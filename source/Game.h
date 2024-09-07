@@ -1,7 +1,7 @@
 #pragma once
 #include "Ui.h"
 #include "Engine.h"
-#include "OperationDetector.h"
+#include "DB_Searcher.h"
 #include <vector>
 
 struct Game {
@@ -10,7 +10,8 @@ struct Game {
     Ui ui;
     BitBoard board;
     Engine engine;
-    OperationDetector op_detector;
+    DB_Searcher searcher;
+    OperationDetector detector;
     std::vector<Coord> white_moves, black_moves;
 
     Game(Mode mode);
