@@ -47,7 +47,7 @@ void Game::run() {
                 //         LOG_OP(op);
                 //     }
                 // }
-                if (moves_count() > 0) searcher.search(&board, white_moves.back());
+                if (moves_count() > 0) searcher.search(&board, &white_moves);
 
                 // op_detector.find_operations(white_moves, &board);
                 // TraceLog(LOG_INFO, "White");

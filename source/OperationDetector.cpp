@@ -5,17 +5,26 @@
 #include <optional>
 
 // NOTE: call reset before doing anything here
-void OperationDetector::find_operations(const std::vector<Coord>& moves, BitBoard* board) {
-    for (Coord move : moves) {
-        assert(IS_PIECE(board->get_cell(move)));
-        find_operations(board, move);
-    }
-}
-
-std::vector<Operation> OperationDetector::find_operations(BitBoard* board, Coord atk_move) {
+std::vector<Operation> OperationDetector::find_operations(BitBoard* board, const std::vector<Coord>& moves) {
     this->board = board;
     this->flags.assign(SIZE*SIZE*4, false);
     std::vector<Operation> result;
+    for (Coord move : moves) {
+        assert(IS_PIECE(board->get_cell(move)));
+        find_operations(result, move);
+    }
+    return result;
+}
+
+std::vector<Operation> OperationDetector::find_operations(BitBoard* board, Coord atk_move) {
+    std::vector<Operation> result;
+    this->board = board;
+    this->flags.assign(SIZE*SIZE*4, false);
+    find_operations(result, atk_move);
+    return result;
+}
+
+void OperationDetector::find_operations(std::vector<Operation>& ops, Coord atk_move) {
     for (Direction d = HORIZONTAL; d < DIR_COUNT; d += 1) {
         if (get_flag(atk_move, d)) continue;
         set_flag(atk_move, d);
@@ -24,25 +33,24 @@ std::vector<Operation> OperationDetector::find_operations(BitBoard* board, Coord
             case Threat::None: case Threat::BrokenTwo:
                 break;
             case Threat::StraightTwo:
-                find_ops_straight_two(result, atk_move, d);
+                find_ops_straight_two(ops, atk_move, d);
                 break;
             case Threat::BrokenThree:
-                find_ops_broken_three(result, atk_move, d);
+                find_ops_broken_three(ops, atk_move, d);
                 break;
             case Threat::StraightThree:
-                find_ops_straight_three(result, atk_move, d);
+                find_ops_straight_three(ops, atk_move, d);
                 break;
             case Threat::BrokenFour:
-                find_ops_broken_four(result, atk_move, d);
+                find_ops_broken_four(ops, atk_move, d);
                 break;
             case Threat::StraightFour:
-                find_ops_straight_four(result, atk_move, d);
+                find_ops_straight_four(ops, atk_move, d);
                 break;
             case Threat::StraightFive:
                 break;
         }
     }
-    return result;
 }
 
 // NOTE:            __XXX__     __XX_X___          -> radius = 3

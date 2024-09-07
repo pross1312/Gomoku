@@ -1,18 +1,19 @@
 #include "DB_Searcher.h"
 #include <cmath>
-#include <cassert>
 
-void DB_Searcher::search(BitBoard* board, Coord last_move) {
-    tree_sized_growed = true;
-    root = make_db_node(DB_Node::Type::Combination, 0, Operation(), std::initializer_list<DB_NodePtr>{nullptr});
-    this->board = board;
-    // detector.reset(board);
+void DB_Searcher::search(BitBoard* b, const std::vector<Coord>* m) {
+    this->tree_sized_growed = true;
+    this->root = make_db_node(DB_Node::Type::Combination, 0, Operation(), std::initializer_list<DB_NodePtr>{nullptr});
+    this->board = b;
+    this->moves = m;
+    this->nodes.clear();
+    assert(this->moves->size() > 0);
 
     size_t level = 1;
     while (tree_sized_growed) {
         tree_sized_growed = false;
-        dependency_stage(root, last_move, level, 0, 2);
-        combination_stage(level, board->get_cell(last_move));
+        dependency_stage(root, moves->back(), level, 0, 1);
+        combination_stage(level, board->get_cell(this->moves->back()));
         level += 1;
         break;
     }
@@ -25,7 +26,12 @@ void DB_Searcher::dependency_stage(DB_NodePtr node, Coord last_move, const size_
         const Figure atk_fig = board->get_cell(last_move);
         assert(IS_PIECE(atk_fig));
 
-        std::vector ops = detector.find_operations(board, last_move);
+        std::vector<Operation> ops;
+        if (node->op == INVALID_OP) {
+            detector.find_operations(board, *moves).swap(ops);
+        } else {
+            detector.find_operations(board, last_move).swap(ops);
+        }
         for (const Operation& op : ops) {
             DB_NodePtr child = make_db_node(DB_Node::Type::Dependency, node->level, op, std::initializer_list{node});
             TraceLog(LOG_INFO, "%*s"NODE_FORMAT, depth*4, " ", FORMAT_NODE(*child));
@@ -58,9 +64,9 @@ void DB_Searcher::dependency_stage(DB_NodePtr node, Coord last_move, const size_
 
 bool DB_Searcher::is_operation_posible(Operation op) {
     return board->get_cell(op.atk)     == Figure::None &&
-           board->get_cell(op.defs[0]) == Figure::None &&
-           board->get_cell(op.defs[1]) == Figure::None &&
-           board->get_cell(op.defs[2]) == Figure::None;
+           (!op.defs[0].is_valid() || board->get_cell(op.defs[0]) == Figure::None) &&
+           (!op.defs[1].is_valid() || board->get_cell(op.defs[1]) == Figure::None) &&
+           (!op.defs[2].is_valid() || board->get_cell(op.defs[2]) == Figure::None);
 }
 
 bool DB_Searcher::replay_node(DB_NodePtr node, Figure atk_fig) {
@@ -68,14 +74,12 @@ bool DB_Searcher::replay_node(DB_NodePtr node, Figure atk_fig) {
     assert(node != nullptr);
     // NOTE: can't never reach null node as root->op is INVALID_OP
     if (node == root) return true;
+    assert(root->op == INVALID_OP);
     assert(node->op != INVALID_OP);
     size_t len = stack.size();
     bool failed = false;
     if (is_operation_posible(node->op)) {
-        board->set_cell(node->op.atk, atk_fig);
-        board->set_cell(node->op.defs[0], OPPOSITE_FIG(atk_fig));
-        board->set_cell(node->op.defs[1], OPPOSITE_FIG(atk_fig));
-        board->set_cell(node->op.defs[2], OPPOSITE_FIG(atk_fig));
+        put_op(node->op, atk_fig);
         stack.push_back(node);
         for (DB_NodePtr parent : node->parents) {
             if (!replay_node(parent, atk_fig)) {
@@ -85,10 +89,7 @@ bool DB_Searcher::replay_node(DB_NodePtr node, Figure atk_fig) {
         }
         if (failed) { // NOTE: roll back in case of conflict
             for (size_t i = len; i < stack.size(); i++) {
-                board->set_cell(stack[i]->op.atk, Figure::None);
-                board->set_cell(stack[i]->op.defs[0], Figure::None);
-                board->set_cell(stack[i]->op.defs[1], Figure::None);
-                board->set_cell(stack[i]->op.defs[2], Figure::None);
+                put_op(stack[i]->op, Figure::None);
             }
         }
     }
@@ -100,22 +101,27 @@ void DB_Searcher::remove_node(DB_NodePtr node) {
     assert(node != nullptr);
     // NOTE: can't never reach null node as root->op is INVALID_OP
     if (node == root) return;
-    board->set_cell(node->op.atk, Figure::None);
-    board->set_cell(node->op.defs[0], Figure::None);
-    board->set_cell(node->op.defs[1], Figure::None);
-    board->set_cell(node->op.defs[2], Figure::None);
+    put_op(node->op, Figure::None);
     for (DB_NodePtr parent : node->parents) remove_node(parent);
 }
 
 bool DB_Searcher::is_combinable(Operation a, Operation b) {
     Coord distance = a.atk - b.atk;
-    return a.dir != b.dir && (distance.row == 0 || distance.col == 0 || std::abs(distance.row) == std::abs(distance.col));
+    if (std::abs(distance.row) == std::abs(distance.col) && a.dir != b.dir && std::abs(distance.row) <= 3) {
+        return true;
+    } else if (distance.row == 0 && (a.dir != HORIZONTAL || b.dir != HORIZONTAL) && std::abs(distance.col) <= 3) {
+        return true;
+    } else if (distance.col == 0 && (a.dir != VERTICAL || b.dir != VERTICAL) && std::abs(distance.col) <= 3) {
+        return true;
+    }
+    return false;
 }
 
 void DB_Searcher::combination_stage(const size_t level, Figure atk_fig) {
     assert(nodes.size() > 1);
     //NOTE: 2 nodes combination
-    for (size_t i = 1; i >= 1; i--) {
+    TraceLog(LOG_INFO, "Combination stage with %zu", nodes.size());
+    for (size_t i = nodes.size()-1; i >= 1; i--) {
         DB_NodePtr node = nodes[i];
         // TODO: recheck this part
         if (node->type == DB_Node::Type::Dependency && node->level + 1 == level) {
@@ -124,17 +130,29 @@ void DB_Searcher::combination_stage(const size_t level, Figure atk_fig) {
             for (size_t j = 0; j < i; j++) {
                 DB_NodePtr that = nodes[j];
 
-                if (that->type == DB_Node::Type::Dependency &&
-                    is_combinable(node->op, that->op) &&
-                    replay_node(that, atk_fig)) {
-                    tree_sized_growed = true;
-                    TraceLog(LOG_INFO, "Combine");
+                if (that->type == DB_Node::Type::Dependency) {
+                    TraceLog(LOG_INFO, "Try to Combine");
                     TraceLog(LOG_INFO, "        "NODE_FORMAT, FORMAT_NODE(*node));
                     TraceLog(LOG_INFO, "        "NODE_FORMAT, FORMAT_NODE(*that));
+                    if (!is_combinable(node->op, that->op)) {
+                        TraceLog(LOG_INFO, "        Not combinable");
+                        continue;
+                    }
+                    if (!replay_node(that, atk_fig)) {
+                        TraceLog(LOG_INFO, "        Not replable");
+                        continue;
+                    }
+                    tree_sized_growed = true;
 
                     std::vector<Operation> ops = detector.find_operations(board, that->op.atk);
+                    TraceLog(LOG_INFO, "Combination childs");
                     for (const Operation& op : ops) {
-                        root = std::make_shared<DB_Node>(DB_Node::Type::Combination, level, op, std::initializer_list{node, that});
+                        // TODO: find out type of threat
+                        //       then extend it based on that threat (with a switch case maybe)
+                        DB_NodePtr child = make_db_node(DB_Node::Type::Combination, level, op, std::initializer_list{node, that});
+                        TraceLog(LOG_INFO, "        "NODE_FORMAT, FORMAT_NODE(*child));
+                        nodes.push_back(child);
+                        node->children.push_back(child);
                     }
 
                     remove_node(that);

@@ -1,6 +1,7 @@
 #pragma once
 #include "BitBoard.h"
 #include "OperationDetector.h"
+#include <cassert>
 #include <memory>
 
 struct DB_Node;
@@ -33,8 +34,17 @@ struct DB_Searcher {
     BitBoard* board;
     DB_NodePtr root;
     std::vector<DB_NodePtr> nodes;
+    const std::vector<Coord>* moves;
 
-    void search(BitBoard* board, Coord last_move);
+    void put_op(Operation op, Figure fig) {
+        assert(op.atk.is_valid());
+        board->set_cell(op.atk, fig);
+        if (op.defs[0].is_valid()) board->set_cell(op.defs[0], fig);
+        if (op.defs[1].is_valid()) board->set_cell(op.defs[1], fig);
+        if (op.defs[2].is_valid()) board->set_cell(op.defs[2], fig);
+    }
+
+    void search(BitBoard* board, const std::vector<Coord>* moves);
 
     void dependency_stage(DB_NodePtr node, Coord last_move, const size_t level, size_t depth, size_t max_depth);
     bool is_operation_posible(Operation op);
