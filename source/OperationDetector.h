@@ -1,5 +1,6 @@
 #pragma once
 #include "BitBoard.h"
+#include "ThreatDetector.h"
 #include <vector>
 #include <optional>
 
@@ -8,8 +9,9 @@ struct Operation {
     Coord atk;
     Coord defs[MAX_DEFS_MOVE];
     Direction dir;
-    Operation(): atk{}, defs{} {}
-    Operation(Coord atk, Direction dir): atk(atk), dir(dir) {}
+    ThreatType type;
+    Operation(): atk{}, defs{}, type{Threat::None} {}
+    Operation(Coord atk, Direction dir, ThreatType type): atk(atk), dir(dir), type(type) {}
     size_t def_count() const { return defs[0].is_valid() + defs[1].is_valid() + defs[2].is_valid(); }
     bool operator!=(const Operation& that) const { return !(this->operator==(that)); }
     bool operator==(const Operation& that) const {
@@ -20,11 +22,13 @@ struct Operation {
     }
 };
 #define INVALID_OP (Operation{})
-#define OP_FORMAT "{Atk: "COORD_FORMAT", Defs: ["COORD_FORMAT", "COORD_FORMAT", "COORD_FORMAT"]}"
+#define OP_FORMAT "{Atk: "COORD_FORMAT", Defs: ["COORD_FORMAT", "COORD_FORMAT", "COORD_FORMAT"]}, Dir: %s, Threat: %s"
 #define FORMAT_OP(op) FORMAT_COORD((op).atk),\
              FORMAT_COORD((op).defs[0]),\
              FORMAT_COORD((op).defs[1]),\
-             FORMAT_COORD((op).defs[2])
+             FORMAT_COORD((op).defs[2]),\
+             (op).dir == HORIZONTAL ? "H" : (op).dir == VERTICAL ? "V" : (op).dir == DIAGONAL ? "D" : "AD",\
+             Threat::to_text((op).type)
 #define LOG_OP(op) TraceLog(LOG_INFO, OP_FORMAT, FORMAT_OP(op))
 
 struct OperationDetector {

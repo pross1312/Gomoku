@@ -43,10 +43,11 @@ void Game::run() {
                 pop_last_move();
             } else if (IsKeyPressed(KEY_SPACE)) {
                 // if (moves_count() > 0) {
-                //     for (auto op : detector.find_operations(&board, white_moves.back())) {
+                //     for (auto op : detector.find_operations(&board, white_moves)) {
                 //         LOG_OP(op);
                 //     }
                 // }
+                TraceLog(LOG_INFO, "------------------------------");
                 if (moves_count() > 0) searcher.search(&board, &white_moves);
 
                 // op_detector.find_operations(white_moves, &board);

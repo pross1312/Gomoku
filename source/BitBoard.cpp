@@ -52,6 +52,7 @@ Line BitBoard::get_line(size_t row, size_t col, Direction dir) const {
         case VERTICAL: return v_lines[col];
         case DIAGONAL: return main_d_lines[row+col];
         case SUBDIAGONAL: return sub_d_lines[(SIZE-1-col) + row];
+        case DIR_COUNT:
         default: assert(false && "Invalid direction");
     }
 }

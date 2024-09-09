@@ -77,9 +77,7 @@ uint32_t ThreatDetector::threshold() {
 }
 
 bool ThreatDetector::is_straight_two(std::array<Figure, THREAT_RANGE> &line, Figure figure) {
-    size_t center = line.size()/2;
-    assert(center >= 3);
-    for (size_t i = center-3; i <= center + 3; i++) {
+    for (size_t i = 0; i < line.size(); i++) {
         if (line[i] == Figure::None) {
             line[i] = figure;
             if (is_straight_three(line, figure)) {

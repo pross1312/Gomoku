@@ -54,7 +54,7 @@
 
 #define SIZE 15
 #define DIAG_SIZE (2*SIZE-1)
-#define RADIUS 5
+#define RADIUS 4 // NOTE: amount of pieces to the left(right) considered when check for threat
 
 enum Figure : uint8_t {
     Out = 0b00,
@@ -63,7 +63,7 @@ enum Figure : uint8_t {
     None = 0b11,
 };
 #define IS_PIECE(figure) ((figure) != Figure::None && (figure) != Figure::Out)
-#define OPPOSITE_FIG(_cell) ((_cell) == Figure::White ? Figure::Black : Figure::White)
+#define OPPOSITE_FIG(_cell) ((_cell) == Figure::White ? Figure::Black : (_cell) == Figure::None ? Figure::None : Figure::White)
 #define INVALID_COORD (Coord{})
 #define COORD_FORMAT "(%d, %d)"
 #define FORMAT_COORD(coord) (coord).row, (coord).col
@@ -73,6 +73,9 @@ struct Coord {
     int8_t row, col;
     Coord(): row{-1}, col{-1} {}
     Coord(int8_t row, int8_t col): row{row}, col{col} {}
+    bool operator!=(Coord c) const {
+        return row != c.row || col != c.col;
+    }
     bool operator==(Coord c) const {
         return row == c.row && col == c.col;
     }

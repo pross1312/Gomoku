@@ -58,20 +58,24 @@ void OperationDetector::find_ops_straight_three(std::vector<Operation>& ops, Coo
     const Figure atk_fig = board->get_cell(center);
     for (int8_t i = 1; i <= 3; i++) {
         Coord left = center - DIR_VECS[dir]*i;
-        if (left.is_valid() && board->get_cell(left) == Figure::None) {
+        if (left.is_valid() && board->get_cell(left) == Figure::None && !get_flag(left, dir)) {
+            set_flag(left, dir);
+
             board->set_cell(left, atk_fig);
             if (ThreatDetector::check(board->get_line_radius(left, dir)) == Threat::StraightFour) {
-                Operation op(left, dir);
+                Operation op(left, dir, Threat::StraightFour);
                 op.defs[0] = find_first_none(left, dir, atk_fig).second;
                 ops.push_back(op);
             }
             board->set_cell(left, Figure::None);
         }
         Coord right = center + DIR_VECS[dir]*i;
-        if (right.is_valid() && board->get_cell(right) == Figure::None) {
+        if (right.is_valid() && board->get_cell(right) == Figure::None && !get_flag(right, dir)) {
+            set_flag(right, dir);
+
             board->set_cell(right, atk_fig);
             if (ThreatDetector::check(board->get_line_radius(right, dir)) == Threat::StraightFour) {
-                Operation op(right, dir);
+                Operation op(right, dir, Threat::StraightFour);
                 op.defs[0] = find_first_none(right, dir, atk_fig).first;
                 ops.push_back(op);
             }
@@ -85,11 +89,11 @@ void OperationDetector::find_ops_straight_four(std::vector<Operation>& ops, Coor
     assert(first.is_valid() && second.is_valid());
     if (!get_flag(first, dir)) {
         set_flag(first, dir);
-        ops.push_back(Operation(first, dir));
+        ops.push_back(Operation(first, dir, Threat::StraightFive));
     }
     if (!get_flag(second, dir)) {
         set_flag(second, dir);
-        ops.push_back(Operation(second, dir));
+        ops.push_back(Operation(second, dir, Threat::StraightFive));
     }
 }
 
@@ -101,7 +105,7 @@ void OperationDetector::find_ops_broken_four(std::vector<Operation>& ops, Coord 
         set_flag(first, dir);
         board->set_cell(first, atk_fig);
         if (ThreatDetector::check(board->get_line_radius(center, dir)) == Threat::StraightFive) {
-            ops.push_back(Operation(first, dir));
+            ops.push_back(Operation(first, dir, Threat::StraightFive));
             found = true;
         }
         board->set_cell(first, Figure::None);
@@ -110,7 +114,7 @@ void OperationDetector::find_ops_broken_four(std::vector<Operation>& ops, Coord 
         set_flag(second, dir);
         board->set_cell(second, atk_fig);
         if (ThreatDetector::check(board->get_line_radius(center, dir)) == Threat::StraightFive) {
-            ops.push_back(Operation(second, dir));
+            ops.push_back(Operation(second, dir, Threat::StraightFive));
         }
         board->set_cell(second, Figure::None);
     }
@@ -121,20 +125,24 @@ void OperationDetector::find_ops_straight_two(std::vector<Operation>& ops, Coord
     const Figure atk_fig = board->get_cell(center);
     for (int8_t i = 1; i <= 3; i++) {
         Coord left = center - DIR_VECS[dir]*i;
-        if (left.is_valid() && board->get_cell(left) == Figure::None) {
+        if (left.is_valid() && board->get_cell(left) == Figure::None && !get_flag(left, dir)) {
+            set_flag(left, dir);
+
             board->set_cell(left, atk_fig);
             if (ThreatDetector::check(board->get_line_radius(left, dir)) == Threat::StraightThree) {
-                Operation op(left, dir);
+                Operation op(left, dir, Threat::StraightThree);
                 find_defs_move_straight_three(op, left, dir);
                 ops.push_back(op);
             }
             board->set_cell(left, Figure::None);
         }
         Coord right = center + DIR_VECS[dir]*i;
-        if (right.is_valid() && board->get_cell(right) == Figure::None) {
+        if (right.is_valid() && board->get_cell(right) == Figure::None && !get_flag(right, dir)) {
+            set_flag(right, dir);
+
             board->set_cell(right, atk_fig);
             if (ThreatDetector::check(board->get_line_radius(right, dir)) == Threat::StraightThree) {
-                Operation op(right, dir);
+                Operation op(right, dir, Threat::StraightThree);
                 find_defs_move_straight_three(op, right, dir);
                 ops.push_back(op);
             }
@@ -206,13 +214,18 @@ void OperationDetector::find_ops_broken_three(std::vector<Operation>& ops, Coord
     const Figure atk_fig = board->get_cell(center);
     for (int8_t i = 1; i <= 4; i++) {
         Coord left = center - DIR_VECS[dir]*i;
-        if (left.is_valid() && board->get_cell(left) == Figure::None) {
+        if (left.is_valid() && board->get_cell(left) == Figure::None && !get_flag(left, dir)) {
+            set_flag(left, dir);
+
             board->set_cell(left, atk_fig);
             if (ThreatDetector::check(board->get_line_radius(left, dir)) == Threat::BrokenFour) {
-                Operation op(left, dir);
+                Operation op(left, dir, Threat::BrokenFour);
                 find_defs_move_broken_four(op, left, dir);
                 ops.push_back(op);
-                Operation op2(op.defs[0], dir);
+
+                assert(!get_flag(op.defs[0], dir));
+                set_flag(op.defs[0], dir);
+                Operation op2(op.defs[0], dir, Threat::BrokenFour);
                 op2.defs[0] = op.atk;
                 ops.push_back(op2);
                 board->set_cell(left, Figure::None);
@@ -221,13 +234,18 @@ void OperationDetector::find_ops_broken_three(std::vector<Operation>& ops, Coord
             board->set_cell(left, Figure::None);
         }
         Coord right = center + DIR_VECS[dir]*i;
-        if (right.is_valid() && board->get_cell(right) == Figure::None) {
+        if (right.is_valid() && board->get_cell(right) == Figure::None && !get_flag(right, dir)) {
+            set_flag(right, dir);
+
             board->set_cell(right, atk_fig);
             if (ThreatDetector::check(board->get_line_radius(right, dir)) == Threat::BrokenFour) {
-                Operation op(right, dir);
+                Operation op(right, dir, Threat::BrokenThree);
                 find_defs_move_broken_four(op, right, dir);
                 ops.push_back(op);
-                Operation op2(op.defs[0], dir);
+
+                assert(!get_flag(op.defs[0], dir));
+                set_flag(op.defs[0], dir);
+                Operation op2(op.defs[0], dir, Threat::BrokenThree);
                 op2.defs[0] = op.atk;
                 ops.push_back(op2);
                 board->set_cell(right, Figure::None);
