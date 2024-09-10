@@ -109,7 +109,7 @@ bool DB_Searcher::apply_threat_sequence(DB_NodePtr node, Figure atk_fig) {
     }
     if (is_op_applicable(node->op)) {
         put_op(node->op, atk_fig);
-        this->moves->push_back(node->op.atk);
+        // this->moves->push_back(node->op.atk);
         return true;
     } else {
         for (DB_NodePtr parent : node->parents) {

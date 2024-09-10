@@ -259,14 +259,14 @@ void OperationDetector::find_ops_broken_three(std::vector<Operation>& ops, Coord
 void OperationDetector::set_flag(Coord move, Direction dir) {
     assert(move.is_valid());
     size_t index = (size_t)move.row*SIZE + move.col;
-    flags[(dir+1)*index] = true;
+    flags[index + dir*SIZE*SIZE] = true;
 }
 
 bool OperationDetector::get_flag(Coord move, Direction dir) {
     assert(move.is_valid());
     size_t index = (size_t)move.row*SIZE + move.col;
-    count += flags[(dir+1)*index];
-    return flags[(dir+1)*index];
+    count += flags[index + dir*SIZE*SIZE];
+    return flags[index + dir*SIZE*SIZE];
 }
 
 // return [left (pos -.. dir), right (pos +.. dir)]
