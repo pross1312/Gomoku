@@ -12,12 +12,9 @@ struct Game {
     Engine engine;
     DB_Searcher searcher;
     OperationDetector detector;
-    std::vector<Coord> white_moves, black_moves;
 
     Game(Mode mode);
 
-    size_t moves_count() const { return white_moves.size() + black_moves.size(); }
-    Coord last_move() const { return white_moves.size() == black_moves.size() ? black_moves.back() : white_moves.back(); }
     void run();
     std::optional<Coord> get_next_move();
     void restart();

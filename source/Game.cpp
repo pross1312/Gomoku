@@ -39,16 +39,16 @@ void Game::run() {
                     print_value(opt_fig.value());
                 }
             }
-            if (IsKeyPressed(KEY_BACKSPACE) && moves_count() > 0) {
+            if (IsKeyPressed(KEY_BACKSPACE)) {
                 pop_last_move();
             } else if (IsKeyPressed(KEY_SPACE)) {
-                // if (moves_count() > 0) {
+                // if (board.moves.size() > 0) {
                 //     for (auto op : detector.find_operations(&board, white_moves)) {
                 //         LOG_OP(op);
                 //     }
                 // }
                 TraceLog(LOG_INFO, "------------------------------");
-                if (moves_count() > 0) searcher.search(&board, &white_moves);
+                // if (board.moves.size() > 0) searcher.search(&board, &white_moves);
 
                 // op_detector.find_operations(white_moves, &board);
                 // TraceLog(LOG_INFO, "White");
@@ -80,7 +80,7 @@ void Game::run() {
                 if (check_win(opt_move.value())) {
                     TraceLog(LOG_INFO, "Player %s win!!!", turn == Turn::White ? "White" : "Black");
                     restart();
-                } else if (moves_count() == SIZE*SIZE) {
+                } else if (board.moves.size() == SIZE*SIZE) {
                     TraceLog(LOG_INFO, "Game draw!");
                     restart();
                 } else {
@@ -128,8 +128,6 @@ std::optional<Coord> Game::get_next_move() {
 
 void Game::restart() {
     board.clear();
-    white_moves.clear();
-    black_moves.clear();
     turn = Turn::White;
 }
 
@@ -140,23 +138,14 @@ void Game::switch_turn() {
 void Game::add_move(Coord pos) {
     if (turn == Turn::White) {
         board.set_cell(pos, Figure::White);
-        white_moves.push_back(pos);
     } else {
         board.set_cell(pos, Figure::Black);
-        black_moves.push_back(pos);
     }
 }
 
 void Game::pop_last_move() {
-    if (moves_count() == 0) return;
-    // White always moves first so white_moves.size() >= black_moves.size()
-    if (white_moves.size() > black_moves.size()) {
-        board.set_cell(white_moves.back(), Figure::None);
-        white_moves.pop_back();
-    } else {
-        board.set_cell(black_moves.back(), Figure::None);
-        black_moves.pop_back();
-    }
+    if (board.moves.size() == 0) return;
+    board.pop_move();
 }
 
 bool Game::check_win(Coord pos) const {

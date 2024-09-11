@@ -6,7 +6,7 @@
 
 Coord Engine::next_move(Game* game) {
     this->game = game;
-    if (game->moves_count() == 0) {
+    if (game->board.moves.size() == 0) {
         return Coord(SIZE/2, SIZE/2);
     }
     cache.clear();

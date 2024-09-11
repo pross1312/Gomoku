@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <array>
 #include <raylib.h>
+#include <vector>
 
 // 15x15
 // 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
@@ -117,10 +118,13 @@ struct BitBoard {
     std::array<Line, SIZE> v_lines;
     std::array<Line, DIAG_SIZE> main_d_lines;
     std::array<Line, DIAG_SIZE> sub_d_lines;
+    struct Move { Coord pos; Figure fig; };
+    std::vector<Move> moves;
 
     BitBoard();
 
     void clear();
+    Move pop_move();
 
     Figure get_cell(size_t row, size_t col) const;
     Figure get_cell(Coord coord) const { return get_cell((size_t)coord.row, (size_t)coord.col); }

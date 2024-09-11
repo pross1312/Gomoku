@@ -5,13 +5,13 @@
 #include <optional>
 
 // NOTE: call reset before doing anything here
-std::vector<Operation> OperationDetector::find_operations(BitBoard* board, const std::vector<Coord>& moves) {
+std::vector<Operation> OperationDetector::find_operations(BitBoard* board, Figure atk_fig) {
+    assert(IS_PIECE(atk_fig));
     this->board = board;
     this->flags.assign(SIZE*SIZE*4, false);
     std::vector<Operation> result;
-    for (Coord move : moves) {
-        assert(IS_PIECE(board->get_cell(move)));
-        find_operations(result, move);
+    for (BitBoard::Move move : board->moves) {
+        if (move.fig == atk_fig) find_operations(result, move.pos);
     }
     return result;
 }
