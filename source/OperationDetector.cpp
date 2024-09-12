@@ -223,13 +223,14 @@ void OperationDetector::find_ops_broken_three(std::vector<Operation>& ops, Coord
                 find_defs_move_broken_four(op, left, dir);
                 ops.push_back(op);
 
-                assert(!get_flag(op.defs[0], dir));
-                set_flag(op.defs[0], dir);
-                Operation op2(op.defs[0], dir, Threat::BrokenFour);
-                op2.defs[0] = op.atk;
-                ops.push_back(op2);
-                board->set_cell(left, Figure::None);
-                return;
+                if (!get_flag(op.defs[0], dir)) {
+                    set_flag(op.defs[0], dir);
+                    Operation op2(op.defs[0], dir, Threat::BrokenFour);
+                    op2.defs[0] = op.atk;
+                    ops.push_back(op2);
+                    board->set_cell(left, Figure::None);
+                    return;
+                }
             }
             board->set_cell(left, Figure::None);
         }
@@ -243,13 +244,14 @@ void OperationDetector::find_ops_broken_three(std::vector<Operation>& ops, Coord
                 find_defs_move_broken_four(op, right, dir);
                 ops.push_back(op);
 
-                assert(!get_flag(op.defs[0], dir));
-                set_flag(op.defs[0], dir);
-                Operation op2(op.defs[0], dir, Threat::BrokenThree);
-                op2.defs[0] = op.atk;
-                ops.push_back(op2);
-                board->set_cell(right, Figure::None);
-                return;
+                if (!get_flag(op.defs[0], dir)) {
+                    set_flag(op.defs[0], dir);
+                    Operation op2(op.defs[0], dir, Threat::BrokenThree);
+                    op2.defs[0] = op.atk;
+                    ops.push_back(op2);
+                    board->set_cell(right, Figure::None);
+                    return;
+                }
             }
             board->set_cell(right, Figure::None);
         }
