@@ -43,6 +43,13 @@ struct DB_Node {
 };
 
 struct DB_Searcher {
+    struct Result {
+        Coord coord;
+        ThreatType threat;
+        size_t depth;
+    };
+    static const Result INVALID_RESULT;
+
     bool tree_size_growed;
     BitBoard* board;
     DB_NodePtr root;
@@ -53,7 +60,7 @@ struct DB_Searcher {
     void log_tree(const DB_NodePtr& node);
     void log_best_threat_sequence();
 
-    void search(BitBoard* board, Figure atk_fig);
+    Result search(BitBoard* board, Figure atk_fig);
     void dependency_stage(DB_NodePtr node, size_t level);
     void combination_stage(size_t level);
 

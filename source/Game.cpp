@@ -48,7 +48,24 @@ void Game::run() {
                 //     }
                 // }
                 TraceLog(LOG_INFO, "------------------------------");
-                if (board.moves.size() > 0) searcher.search(&board, Figure::White);
+                if (board.moves.size() > 0) {
+                    DB_Searcher::Result res = searcher.search(&board, Figure::White);
+                    if (res.coord != INVALID_COORD) {
+                        TraceLog(LOG_INFO, "White: "COORD_FORMAT" to get %s after %zu moves.",
+                                 FORMAT_COORD(res.coord), Threat::to_text(res.threat), res.depth);
+                    } else {
+                        TraceLog(LOG_INFO, "White: no threat");
+                    }
+                }
+                if (board.moves.size() > 0) {
+                    DB_Searcher::Result res = searcher.search(&board, Figure::Black);
+                    if (res.coord != INVALID_COORD) {
+                        TraceLog(LOG_INFO, "Black: "COORD_FORMAT" to get %s after %zu moves.",
+                                 FORMAT_COORD(res.coord), Threat::to_text(res.threat), res.depth);
+                    } else {
+                        TraceLog(LOG_INFO, "Black: no threat");
+                    }
+                }
 
                 // op_detector.find_operations(white_moves, &board);
                 // TraceLog(LOG_INFO, "White");

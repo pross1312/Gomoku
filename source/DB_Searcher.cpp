@@ -2,7 +2,7 @@
 #include <cmath>
 
 constexpr size_t MAX_LEVEL = 100;
-void DB_Searcher::search(BitBoard* b, Figure atk_fig) {
+DB_Searcher::Result DB_Searcher::search(BitBoard* b, Figure atk_fig) {
     this->tree_size_growed = true;
     this->board = b;
     this->atk_fig = atk_fig;
@@ -21,7 +21,20 @@ void DB_Searcher::search(BitBoard* b, Figure atk_fig) {
     }
     // log_tree(this->root);
     // TraceLog(LOG_INFO, "Best threat found: %s", this->root->best_child == nullptr ? "None" : Threat::to_text(this->root->best_child->op.type));
-    log_best_threat_sequence();
+    // log_best_threat_sequence();
+    if (this->root->best_child == nullptr) {
+        return DB_Searcher::Result{
+            .coord = INVALID_COORD,
+            .threat = (ThreatType)-1,
+            .depth = (size_t)-1,
+        };
+    } else {
+        return DB_Searcher::Result{
+            .coord = this->root->best_child->op.atk,
+            .threat = this->root->best_child_threat,
+            .depth = this->root->best_depth,
+        };
+    }
 }
 
 void DB_Searcher::dependency_stage(DB_NodePtr node, size_t level) {
@@ -53,6 +66,7 @@ void DB_Searcher::dependency_stage(DB_NodePtr node, size_t level) {
             );
             node->children.push_back(child);
             this->nodes.push_back(child);
+            if (op.type == Threat::StraightFive) continue;
             dependency_stage(child, level);
             if (node->best_child == nullptr ||
                (child->best_child != nullptr && (child->best_child_threat > node->best_child_threat || (child->best_child_threat == node->best_child_threat && child->best_depth < node->best_depth))) ||
@@ -98,7 +112,7 @@ void DB_Searcher::combination_stage(size_t level) {
     assert(true && "Umimplemented");
     for (int i = this->nodes.size()-1; i > 0; i--) {
         DB_NodePtr comb_node = this->nodes[i];
-        if (comb_node->level + 1 == level && play_threat_sequence(comb_node)) {
+        if (comb_node->level + 1 == level && comb_node->op.type < Threat::StraightFour && play_threat_sequence(comb_node)) {
 
             for (int j = i-1; j > 0; j--) {
                 DB_NodePtr node_2 = this->nodes[j];
