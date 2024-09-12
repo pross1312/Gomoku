@@ -4,6 +4,7 @@
 
 BitBoard::BitBoard() {
     clear();
+    this->moves.reserve(SIZE*SIZE);
 }
 
 void BitBoard::clear() {
@@ -34,24 +35,27 @@ Figure BitBoard::get_cell(size_t row, size_t col) const {
     return Figure((h_lines[row] >> 2*(SIZE-1 - col)) & 0b11);
 }
 
+void BitBoard::add_move(size_t row, size_t col, Figure cell) {
+    assert(IS_PIECE(cell));
+    if (get_cell(row, col) != Figure::None) {
+        for (Move& move : moves) {
+            if ((size_t)move.pos.row == row && (size_t)move.pos.col == col) {
+                move.fig = cell;
+                break;
+            }
+        }
+    } else {
+        moves.push_back(Move{
+            .pos = Coord(row, col),
+            .fig = cell,
+        });
+    }
+    set_cell(row, col, cell);
+}
+
 void BitBoard::set_cell(size_t row, size_t col, Figure cell) {
     assert(cell != Figure::Out && "Invalid cell");
     assert(row < SIZE && col < SIZE && "Out of bound");
-    if (cell != Figure::None) {
-        if (get_cell(row, col) != Figure::None) {
-            for (Move& move : moves) {
-                if ((size_t)move.pos.row == row && (size_t)move.pos.col == col) {
-                    move.fig = cell;
-                    break;
-                }
-            }
-        } else {
-            moves.push_back(Move{
-                .pos = Coord(row, col),
-                .fig = cell,
-            });
-        }
-    }
 
     static const auto set = [](size_t right_gap, Line *line, Figure c) {
         *line |= (0b11 << 2*right_gap);

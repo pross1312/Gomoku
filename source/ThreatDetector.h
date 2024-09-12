@@ -16,7 +16,7 @@ struct Threat {
         StraightThree,
         BrokenFour,
         StraightFour,
-        StraightFive,
+        StraightFive = 100,
     };
     static const char* to_text(ThreatType threat) {
         switch (threat) {

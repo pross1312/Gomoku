@@ -129,6 +129,8 @@ struct BitBoard {
     Figure get_cell(size_t row, size_t col) const;
     Figure get_cell(Coord coord) const { return get_cell((size_t)coord.row, (size_t)coord.col); }
 
+    void add_move(size_t row, size_t col, Figure cell);
+    void add_move(Coord coord, Figure cell) { add_move((size_t)coord.row, (size_t)coord.col, cell); };
     void set_cell(size_t row, size_t col, Figure cell);
     void set_cell(Coord coord, Figure cell) { set_cell((size_t)coord.row, (size_t)coord.col, cell); };
 

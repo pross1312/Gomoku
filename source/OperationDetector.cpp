@@ -24,6 +24,37 @@ std::vector<Operation> OperationDetector::find_operations(BitBoard* board, Coord
     return result;
 }
 
+std::vector<Operation> OperationDetector::find_operations(BitBoard* board, Coord atk_move, Direction dir) {
+    std::vector<Operation> result;
+    this->board = board;
+    this->flags.assign(SIZE*SIZE*4, false);
+
+    set_flag(atk_move, dir);
+    Line line = board->get_line_radius(atk_move, dir);
+    switch (ThreatDetector::check(line)) {
+        case Threat::None: case Threat::BrokenTwo:
+            break;
+        case Threat::StraightTwo:
+            find_ops_straight_two(result, atk_move, dir);
+            break;
+        case Threat::BrokenThree:
+            find_ops_broken_three(result, atk_move, dir);
+            break;
+        case Threat::StraightThree:
+            find_ops_straight_three(result, atk_move, dir);
+            break;
+        case Threat::BrokenFour:
+            find_ops_broken_four(result, atk_move, dir);
+            break;
+        case Threat::StraightFour:
+            find_ops_straight_four(result, atk_move, dir);
+            break;
+        case Threat::StraightFive:
+            break;
+    }
+    return result;
+}
+
 void OperationDetector::find_operations(std::vector<Operation>& ops, Coord atk_move) {
     for (Direction d = HORIZONTAL; d < DIR_COUNT; d += 1) {
         if (get_flag(atk_move, d)) continue;

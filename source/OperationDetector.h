@@ -38,6 +38,7 @@ struct OperationDetector {
 
     std::vector<Operation> find_operations(BitBoard* board, Figure atk_fig);
     std::vector<Operation> find_operations(BitBoard* board, Coord atk_move);
+    std::vector<Operation> find_operations(BitBoard* board, Coord atk_move, Direction dir);
 
 private:
     void find_operations(std::vector<Operation>& ops, Coord atk_move);

@@ -48,7 +48,7 @@ void Game::run() {
                 //     }
                 // }
                 TraceLog(LOG_INFO, "------------------------------");
-                // if (board.moves.size() > 0) searcher.search(&board, &white_moves);
+                if (board.moves.size() > 0) searcher.search(&board, Figure::White);
 
                 // op_detector.find_operations(white_moves, &board);
                 // TraceLog(LOG_INFO, "White");
@@ -137,9 +137,9 @@ void Game::switch_turn() {
 
 void Game::add_move(Coord pos) {
     if (turn == Turn::White) {
-        board.set_cell(pos, Figure::White);
+        board.add_move(pos, Figure::White);
     } else {
-        board.set_cell(pos, Figure::Black);
+        board.add_move(pos, Figure::Black);
     }
 }
 
