@@ -4,67 +4,70 @@
 #include <algorithm>
 #include <cmath>
 
-Coord Engine::next_move(Game* game) {
-    this->game = game;
-    if (game->board.moves.size() == 0) {
+Coord Engine::next_move(BitBoard* board, Figure atk_fig) {
+    if (board->moves.size() == 0) {
         return Coord(SIZE/2, SIZE/2);
     }
-    cache.clear();
-    cache_hit = 0;
-    auto result = search(0, 4).first;
-    TraceLog(LOG_INFO, "Cache size: %zu", cache.size());
-    TraceLog(LOG_INFO, "Cache hit: %zu", cache_hit);
+    this->board = board;
+    this->atk_fig = atk_fig;
+    this->cache.clear();
+    this->cache_hit = 0;
+
+    Coord result = search();
+    // TraceLog(LOG_INFO, "Cache size: %zu", cache.size());
+    // TraceLog(LOG_INFO, "Cache hit: %zu", cache_hit);
     return result;
 }
 
-std::pair<Coord, uint32_t> Engine::search(size_t depth, size_t max_depth) {
-    auto value = cache.find(game->board.h_lines);
-    if (value != cache.end()) {
-        cache_hit += 1;
-        return value->second;
-    }
-
-    Figure atk_fig = game->turn == Game::Turn::White ? Figure::White : Figure::Black;
-    MoveList potential_moves = get_move_list();
-    assert(potential_moves.size() > 0);
-    std::sort(potential_moves.begin(), potential_moves.end(), [&](Coord a, Coord b) {
-        return move_value(a, atk_fig) > move_value(b, atk_fig);
-    });
-    std::pair<Coord, uint32_t> result;
-    game->add_move(potential_moves[0]);
-    if (depth >= max_depth) {
-        game->pop_last_move();
-        result = std::pair(potential_moves[0], move_value(potential_moves[0], atk_fig));
-    } else if (game->check_win(potential_moves[0])) {
-        game->pop_last_move();
-        result = std::pair(potential_moves[0], UINT32_MAX);
+Coord Engine::search() {
+    SearchResult atk_res = db_searcher.search(board, atk_fig);
+    SearchResult def_res = db_searcher.search(board, OPPOSITE_FIG(atk_fig));
+    TraceLog(LOG_INFO, "------------------------------");
+    if (!IS_INVALID_RES(atk_res)) {
+        TraceLog(LOG_INFO, "White: "COORD_FORMAT" to get %s after %zu moves.",
+                FORMAT_COORD(atk_res.coord), Threat::to_text(atk_res.threat), atk_res.depth);
     } else {
-        result.second = UINT32_MAX;
-        game->pop_last_move();
-        for (size_t i = 0; i < potential_moves.size() &&
-                (i == 0 || move_value(potential_moves[i], atk_fig) > ThreatDetector::threshold()); i++) {
-            game->add_move(potential_moves[i]);
-            game->switch_turn();
-            auto[_, temp_move_value] = search(depth+1, max_depth);
-            game->switch_turn();
-            game->pop_last_move();
-            if (temp_move_value < result.second) {
-                result = std::pair(potential_moves[i], temp_move_value);
+        TraceLog(LOG_INFO, "White: no threat");
+    }
+    if (!IS_INVALID_RES(def_res)) {
+        TraceLog(LOG_INFO, "Black: "COORD_FORMAT" to get %s after %zu moves.",
+                FORMAT_COORD(def_res.coord), Threat::to_text(def_res.threat), def_res.depth);
+    } else {
+        TraceLog(LOG_INFO, "Black: no threat");
+    }
+    if (!IS_INVALID_RES(def_res) && def_res.threat == Threat::StraightFive && def_res.depth <= 3) {
+        if (!IS_INVALID_RES(atk_res) && atk_res.threat >= Threat::StraightFour) {
+            this->board->set_cell(def_res.coord, OPPOSITE_FIG(this->atk_fig));
+            Line4 lines = this->board->get_lines_radius(def_res.coord);
+            this->board->set_cell(def_res.coord, Figure::None);
+            if (ThreatDetector::check(lines[HORIZONTAL]) < Threat::BrokenFour && 
+                ThreatDetector::check(lines[VERTICAL]) < Threat::BrokenFour &&
+                ThreatDetector::check(lines[DIAGONAL]) < Threat::BrokenFour &&
+                ThreatDetector::check(lines[SUBDIAGONAL]) < Threat::BrokenFour) {
+                return atk_res.coord;
             }
         }
+        return def_res.coord;
+    } else if (!IS_INVALID_RES(atk_res) && atk_res.threat >= Threat::StraightFour) {
+        return atk_res.coord;
     }
-    cache[game->board.h_lines] = result;
-    return result;
+    TraceLog(LOG_INFO, "Shallow search");
+    std::vector<Coord> move_list = get_move_list();
+    assert(move_list.size() > 0);
+    std::sort(move_list.begin(), move_list.end(), [this](Coord x, Coord y) {
+        return Engine::move_value(this->board, x, this->atk_fig) > Engine::move_value(this->board, y, this->atk_fig);
+    });
+    return move_list[0];
 }
 
-uint32_t Engine::move_value(Coord pos, Figure atk_fig) {
-    Figure old_fig = game->board.get_cell(pos);
-    game->board.set_cell(pos, atk_fig);
-    Line4 atk_lines = game->board.get_lines_radius(pos);
+uint32_t Engine::move_value(BitBoard* board, Coord pos, Figure atk_fig) {
+    Figure old_fig = board->get_cell(pos);
+    board->set_cell(pos, atk_fig);
+    Line4 atk_lines = board->get_lines_radius(pos);
     Figure def_fig = OPPOSITE_FIG(atk_fig);
-    game->board.set_cell(pos, def_fig);
-    Line4 def_lines = game->board.get_lines_radius(pos);
-    game->board.set_cell(pos, old_fig);
+    board->set_cell(pos, def_fig);
+    Line4 def_lines = board->get_lines_radius(pos);
+    board->set_cell(pos, old_fig);
     return ThreatDetector::atk_value(ThreatDetector::check(atk_lines[HORIZONTAL]))      +
            ThreatDetector::atk_value(ThreatDetector::check(atk_lines[VERTICAL]))      +
            ThreatDetector::atk_value(ThreatDetector::check(atk_lines[DIAGONAL])) +
@@ -75,52 +78,14 @@ uint32_t Engine::move_value(Coord pos, Figure atk_fig) {
            ThreatDetector::def_value(ThreatDetector::check(def_lines[SUBDIAGONAL]));
 }
 
-MoveList Engine::get_move_list() {
-    MoveList result;
+std::vector<Coord> Engine::get_move_list() {
+    std::vector<Coord> result;
     for (size_t row = 0; row < SIZE; row++) {
         for (size_t col = 0; col < SIZE; col++) {
-            if (game->board.get_cell(row, col) == Figure::None) {
+            if (board->get_cell(row, col) == Figure::None) {
                 result.push_back(Coord(row, col));
             }
         }
     }
     return result;
 }
-// MoveList Engine::get_move_list() {
-//     MoveList result;
-//     Coord center = game->white_moves.back();
-//     SearchRegion white_reg;
-//     white_reg.top    = center.row < REGION_SIZE/2        ? 0           : center.row - REGION_SIZE/2;
-//     white_reg.left   = center.col < REGION_SIZE/2        ? 0           : center.col - REGION_SIZE/2;
-//     white_reg.width  = center.col + REGION_SIZE/2 < SIZE ? REGION_SIZE : SIZE-1-white_reg.left;
-//     white_reg.height = center.row + REGION_SIZE/2 < SIZE ? REGION_SIZE : SIZE-1-white_reg.top;
-//     for (size_t row = 0; row < white_reg.height; row++) {
-//         for (size_t col = 0; col < white_reg.width; col++) {
-//             if (white_reg.top + row < SIZE && white_reg.left + col < SIZE) {
-//                 Coord pos { white_reg.top + row, white_reg.left + col };
-//                 if (game->board.get_cell(pos) == Figure::None) {
-//                     result.push_back(pos);
-//                 }
-//             }
-//         }
-//     }
-//     if (game->moves_count() > 1) {
-//         center = game->black_moves.back();
-//         SearchRegion black_reg;
-//         black_reg.top    = center.row < REGION_SIZE/2        ? 0           : center.row - REGION_SIZE/2;
-//         black_reg.left   = center.col < REGION_SIZE/2        ? 0           : center.col - REGION_SIZE/2;
-//         black_reg.width  = center.col + REGION_SIZE/2 < SIZE ? REGION_SIZE : SIZE-1-black_reg.left;
-//         black_reg.height = center.row + REGION_SIZE/2 < SIZE ? REGION_SIZE : SIZE-1-black_reg.top;
-//         for (size_t row = 0; row < black_reg.height; row++) {
-//             for (size_t col = 0; col < black_reg.width; col++) {
-//                 if (black_reg.top + row < SIZE && black_reg.left + col < SIZE) {
-//                     Coord pos { black_reg.top + row, black_reg.left + col };
-//                     if (!white_reg.contain(pos.row, pos.col) && game->board.get_cell(pos) == Figure::None) {
-//                         result.push_back(pos);
-//                     }
-//                 }
-//             }
-//         }
-//     }
-//     return result;
-// }

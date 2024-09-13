@@ -46,10 +46,10 @@ uint32_t ThreatDetector::atk_value(ThreatType threat) {
     switch (threat) {
         case Threat::None: return 0;
         case Threat::BrokenTwo: return 5;
-        case Threat::StraightTwo: return 10;
+        case Threat::StraightTwo: return 30;
         case Threat::BrokenThree: return 60;
-        case Threat::StraightThree: return 100;
-        case Threat::BrokenFour: return 110;
+        case Threat::StraightThree: return 300;
+        case Threat::BrokenFour: return 400;
         case Threat::StraightFour: return 1000;
         case Threat::StraightFive: return 10000;
     }
@@ -62,10 +62,10 @@ uint32_t ThreatDetector::def_value(ThreatType threat) {
         case Threat::None: return 0;
         case Threat::BrokenTwo: return 5;
         case Threat::StraightTwo: return 10;
-        case Threat::BrokenThree: return 60;
-        case Threat::StraightThree: return 70;
-        case Threat::BrokenFour: return 110;
-        case Threat::StraightFour: return 500;
+        case Threat::BrokenThree: return 20;
+        case Threat::StraightThree: return 100;
+        case Threat::BrokenFour: return 100;
+        case Threat::StraightFour: return 700;
         case Threat::StraightFive: return 5000;
     }
     assert(false && "Unknown threat");

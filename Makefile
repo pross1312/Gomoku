@@ -1,7 +1,7 @@
 OUT_DIR=./build
 SRC_DIR=./source
 CC=g++
-FLAGS=-Wall -Wextra -Wswitch -Wswitch-enum -Wno-literal-suffix -ggdb -I./raylib-5.0_linux_amd64/include/ -L./raylib-5.0_linux_amd64/lib
+FLAGS=-Wall -Wextra -Wswitch -Wswitch-enum -Wno-literal-suffix -O3 -I./raylib-5.0_linux_amd64/include/ -L./raylib-5.0_linux_amd64/lib
 LIBS=-l:libraylib.a
 
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)

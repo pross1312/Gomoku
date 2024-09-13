@@ -3,6 +3,7 @@
 #include "OperationDetector.h"
 #include <cassert>
 #include <memory>
+#include <unordered_map>
 
 struct DB_Node;
 typedef std::shared_ptr<DB_Node> DB_NodePtr;
@@ -17,6 +18,12 @@ typedef std::shared_ptr<DB_Node> DB_NodePtr;
         FORMAT_OP((node).op)
 #define LOG_NODE(node) TraceLog(LOG_INFO, NODE_FORMAT, FORMAT_NODE(node))
 
+struct SearchResult {
+    Coord coord;
+    ThreatType threat;
+    size_t depth;
+};
+#define IS_INVALID_RES(res) ((res).coord == INVALID_COORD)
 struct DB_Node {
     enum Type : uint8_t {
         Dependency,
@@ -28,9 +35,7 @@ struct DB_Node {
     size_t level;
     size_t depth;
 
-    DB_NodePtr best_child;
-    ThreatType best_child_threat;
-    size_t     best_depth;
+    SearchResult best_res;
 
     DB_Node(Type type, Operation op, size_t level, size_t depth):
         DB_Node(type, op, nullptr, nullptr, level, depth) {}
@@ -43,12 +48,7 @@ struct DB_Node {
 };
 
 struct DB_Searcher {
-    struct Result {
-        Coord coord;
-        ThreatType threat;
-        size_t depth;
-    };
-    static const Result INVALID_RESULT;
+    static const SearchResult INVALID_RESULT;
 
     bool tree_size_growed;
     BitBoard* board;
@@ -60,7 +60,7 @@ struct DB_Searcher {
     void log_tree(const DB_NodePtr& node);
     void log_best_threat_sequence();
 
-    Result search(BitBoard* board, Figure atk_fig);
+    SearchResult search(BitBoard* board, Figure atk_fig);
     void dependency_stage(DB_NodePtr node, size_t level);
     void combination_stage(size_t level);
 
@@ -71,4 +71,6 @@ struct DB_Searcher {
     bool is_op_posible(const Operation& op);
     void put_op(const Operation& op);
     void remove_op(const Operation& op);
+
+    bool update_best_result(DB_NodePtr node, DB_NodePtr child);
 };

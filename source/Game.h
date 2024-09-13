@@ -12,6 +12,7 @@ struct Game {
     Engine engine;
     DB_Searcher searcher;
     OperationDetector detector;
+    bool is_game_end;
 
     Game(Mode mode);
 

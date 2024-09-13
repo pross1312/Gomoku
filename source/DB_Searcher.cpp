@@ -1,8 +1,9 @@
 #include "DB_Searcher.h"
+#include "Engine.h"
 #include <cmath>
 
 constexpr size_t MAX_LEVEL = 100;
-DB_Searcher::Result DB_Searcher::search(BitBoard* b, Figure atk_fig) {
+SearchResult DB_Searcher::search(BitBoard* b, Figure atk_fig) {
     this->tree_size_growed = true;
     this->board = b;
     this->atk_fig = atk_fig;
@@ -22,19 +23,7 @@ DB_Searcher::Result DB_Searcher::search(BitBoard* b, Figure atk_fig) {
     // log_tree(this->root);
     // TraceLog(LOG_INFO, "Best threat found: %s", this->root->best_child == nullptr ? "None" : Threat::to_text(this->root->best_child->op.type));
     // log_best_threat_sequence();
-    if (this->root->best_child == nullptr) {
-        return DB_Searcher::Result{
-            .coord = INVALID_COORD,
-            .threat = (ThreatType)-1,
-            .depth = (size_t)-1,
-        };
-    } else {
-        return DB_Searcher::Result{
-            .coord = this->root->best_child->op.atk,
-            .threat = this->root->best_child_threat,
-            .depth = this->root->best_depth,
-        };
-    }
+    return this->root->best_res;
 }
 
 void DB_Searcher::dependency_stage(DB_NodePtr node, size_t level) {
@@ -68,37 +57,13 @@ void DB_Searcher::dependency_stage(DB_NodePtr node, size_t level) {
             this->nodes.push_back(child);
             if (op.type == Threat::StraightFive) continue;
             dependency_stage(child, level);
-            if (node->best_child == nullptr ||
-               (child->best_child != nullptr && (child->best_child_threat > node->best_child_threat || (child->best_child_threat == node->best_child_threat && child->best_depth < node->best_depth))) ||
-               (child->best_child == nullptr && (child->op.type           > node->best_child_threat || (child->op.type           == node->best_child_threat && child->depth      < node->best_depth))))
-            {
-                if (child->best_child != nullptr) {
-                    node->best_child_threat = child->best_child_threat;
-                    node->best_depth        = child->best_depth;
-                } else {
-                    node->best_child_threat = child->op.type;
-                    node->best_depth = child->depth;
-                }
-                node->best_child = child;
-            }
+            update_best_result(node, child);
         }
 
     } else {
         for (auto const& child : node->children) {
             dependency_stage(child, level);
-            if (node->best_child == nullptr ||
-               (child->best_child != nullptr && (child->best_child_threat > node->best_child_threat || (child->best_child_threat == node->best_child_threat && child->best_depth < node->best_depth))) ||
-               (child->best_child == nullptr && (child->op.type           > node->best_child_threat || (child->op.type           == node->best_child_threat && child->depth      < node->best_depth))))
-            {
-                if (child->best_child != nullptr) {
-                    node->best_child_threat = child->best_child_threat;
-                    node->best_depth        = child->best_depth;
-                } else {
-                    node->best_child_threat = child->op.type;
-                    node->best_depth = child->depth;
-                }
-                node->best_child = child;
-            }
+            update_best_result(node, child);
         }
     }
 
@@ -136,19 +101,8 @@ void DB_Searcher::combination_stage(size_t level) {
                             level,
                             comb_node->depth + node_2->depth + 1
                         );
-                        if (comb_node->best_child == nullptr ||
-                           (child->best_child != nullptr && (child->best_child_threat > comb_node->best_child_threat || (child->best_child_threat == comb_node->best_child_threat && child->best_depth < comb_node->best_depth))) ||
-                           (child->best_child == nullptr && (child->op.type           > comb_node->best_child_threat || (child->op.type           == comb_node->best_child_threat && child->depth      < comb_node->best_depth))))
-                        {
-                            if (child->best_child != nullptr) {
-                                comb_node->best_child_threat = child->best_child_threat;
-                                comb_node->best_depth        = child->best_depth;
-                            } else {
-                                comb_node->best_child_threat = child->op.type;
-                                comb_node->best_depth = child->depth;
-                            }
-                            comb_node->best_child = child;
-                        }
+                        update_best_result(comb_node, child);
+
                         this->nodes.push_back(child);
                         comb_node->children.push_back(child);
                     }
@@ -167,19 +121,7 @@ void DB_Searcher::combination_stage(size_t level) {
                             level,
                             comb_node->depth + node_2->depth + 1
                         );
-                        if (comb_node->best_child == nullptr ||
-                           (child->best_child != nullptr && (child->best_child_threat > comb_node->best_child_threat || (child->best_child_threat == comb_node->best_child_threat && child->best_depth < comb_node->best_depth))) ||
-                           (child->best_child == nullptr && (child->op.type           > comb_node->best_child_threat || (child->op.type           == comb_node->best_child_threat && child->depth      < comb_node->best_depth))))
-                        {
-                            if (child->best_child != nullptr) {
-                                comb_node->best_child_threat = child->best_child_threat;
-                                comb_node->best_depth        = child->best_depth;
-                            } else {
-                                comb_node->best_child_threat = child->op.type;
-                                comb_node->best_depth = child->depth;
-                            }
-                            comb_node->best_child = child;
-                        }
+                        update_best_result(comb_node, child);
                         this->nodes.push_back(child);
                         comb_node->children.push_back(child);
                     }
@@ -189,6 +131,22 @@ void DB_Searcher::combination_stage(size_t level) {
             remove_threat_sequence(comb_node);
         }
     }
+}
+
+bool DB_Searcher::update_best_result(DB_NodePtr node, DB_NodePtr child) {
+    SearchResult child_res = IS_INVALID_RES(child->best_res) ?
+        SearchResult{.coord = child->op.atk, .threat = child->op.type, .depth = child->depth} :
+        child->best_res;
+    if (IS_INVALID_RES(node->best_res) || child_res.threat > node->best_res.threat ||
+       (child_res.threat == node->best_res.threat && child_res.threat == Threat::StraightFive && child_res.depth < node->best_res.depth) ||
+       (child_res.threat == node->best_res.threat && Engine::move_value(this->board, child->op.atk, this->atk_fig) > Engine::move_value(this->board, node->best_res.coord, this->atk_fig)))
+    {
+        node->best_res.depth = child_res.depth;
+        node->best_res.threat = child_res.threat;
+        node->best_res.coord = child->op.atk;
+        return true;
+    }
+    return false;
 }
 
 bool DB_Searcher::is_nodes_combinable(const DB_NodePtr& node_1, const DB_NodePtr& node_2) {
@@ -263,9 +221,9 @@ void DB_Searcher::log_tree(const DB_NodePtr& node) {
 }
 
 void DB_Searcher::log_best_threat_sequence() {
-    DB_NodePtr node = this->root;
-    while (node != nullptr) {
-        LOG_NODE(*node);
-        node = node->best_child;
-    }
+    // DB_NodePtr node = this->root;
+    // while (node != nullptr) {
+    //     LOG_NODE(*node);
+    //     node = node->best_child;
+    // }
 }

@@ -45,24 +45,25 @@ void Ui::render_board(const BitBoard &board) {
                 DrawRectangleRec(rec, EMPTY_COLOR);
             }
             switch (cell) {
-                case Figure::White: render_white(rec, mouse_in_cell); break;
-                case Figure::Black: render_black(rec, mouse_in_cell); break;
+                case Figure::White: {
+                    Color color = mouse_in_cell ? MOUSE_IN_WHITE_COLOR : WHITE_COLOR;
+                    if (board.moves.size() > 0 && board.moves.back().pos == Coord(row, col)) {
+                        DrawCircle(rec.x + rec.width/2.0f, rec.y + rec.height/2.0f, rec.width/2.0f, LAST_MOVE_COLOR);
+                    }
+                    DrawCircle(rec.x + rec.width/2.0f, rec.y + rec.height/2.0f, rec.width/2.5f, color);
+                } break;
+                case Figure::Black: {
+                    Color color = mouse_in_cell ? MOUSE_IN_BLACK_COLOR : BLACK_COLOR;
+                    if (board.moves.size() > 0 && board.moves.back().pos == Coord(row, col)) {
+                        DrawCircle(rec.x + rec.width/2.0f, rec.y + rec.height/2.0f, rec.width/2.0f, LAST_MOVE_COLOR);
+                    }
+                    DrawCircle(rec.x + rec.width/2.0f, rec.y + rec.height/2.0f, rec.width/2.5f, color);
+                } break;
                 case Figure::None: break;
                 case Figure::Out: break;
             }
         }
     }
-}
-
-void Ui::render_white(Rectangle box, bool mouse_in) {
-//     const float padding = 5.0f;
-//     Color color = mouse_in ? MOUSE_IN_WHITE_COLOR : WHITE_COLOR;
-//     DrawLineEx(Vector2{.x = box.x + padding, .y = box.y + padding},
-//                Vector2{.x = box.x + box.width - padding, .y = box.y - padding + box.height}, 10.0f, color);
-//     DrawLineEx(Vector2{.x = box.x + box.width - padding, .y = box.y + padding},
-//                Vector2{.x = box.x + padding, .y = box.y - padding + box.height}, 10.0f, color);
-    Color color = mouse_in ? MOUSE_IN_WHITE_COLOR : WHITE_COLOR;
-    DrawCircle(box.x + box.width/2.0f, box.y + box.height/2.0f, box.width/2.2f, color);
 }
 
 void Ui::render_black(Rectangle box, bool mouse_in) {

@@ -3,11 +3,12 @@
 #include <cmath>
 
 BitBoard::BitBoard() {
-    clear();
     this->moves.reserve(SIZE*SIZE);
+    clear();
 }
 
 void BitBoard::clear() {
+    this->moves.clear();
     for (Line &line : h_lines) line = (1 << 2*SIZE) - 1;
     for (Line &line : v_lines) line = (1 << 2*SIZE) - 1;
     for (size_t i = 1; i <= SIZE; i++) {
