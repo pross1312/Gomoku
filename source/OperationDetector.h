@@ -32,26 +32,27 @@ struct Operation {
 #define LOG_OP(op) TraceLog(LOG_INFO, OP_FORMAT, FORMAT_OP(op))
 
 struct OperationDetector {
-    std::vector<bool> flags;
-    BitBoard* board;
-    size_t count = 0;
+    static std::vector<bool> flags;
+    static BitBoard* board;
 
-    std::vector<Operation> find_operations(BitBoard* board, Figure atk_fig);
-    std::vector<Operation> find_operations(BitBoard* board, Coord atk_move);
-    std::vector<Operation> find_operations(BitBoard* board, Coord atk_move, Direction dir);
+    static std::vector<Operation> find_operations(BitBoard* board, Figure atk_fig);
+    static std::vector<Operation> find_operations(BitBoard* board, Coord atk_move);
+    static std::vector<Operation> find_operations(BitBoard* board, Coord atk_move, Direction dir);
+
+    static std::vector<Coord> find_defs(BitBoard* board, Coord atk_move, ThreatType lower_limit);
 
 private:
-    void find_operations(std::vector<Operation>& ops, Coord atk_move);
-    void set_flag(Coord move, Direction dir);
-    bool get_flag(Coord move, Direction dir);
+    static void find_operations(std::vector<Operation>& ops, Coord atk_move);
+    static void set_flag(Coord move, Direction dir);
+    static bool get_flag(Coord move, Direction dir);
 
-    std::pair<Coord, Coord> find_first_none(Coord pos, Direction dir, Figure atk_fig);
-    void find_defs_move_straight_three(Operation& op, Coord center, Direction dir);
-    void find_defs_move_broken_four(Operation& op, Coord center, Direction dir);
-    void find_ops_straight_two(std::vector<Operation>& ops, Coord move, Direction dir);
-    void find_ops_broken_three(std::vector<Operation>& ops, Coord move, Direction dir);
-    void find_ops_straight_three(std::vector<Operation>& ops, Coord move, Direction dir);
-    void find_ops_broken_four(std::vector<Operation>& ops, Coord move, Direction dir);
-    void find_ops_straight_four(std::vector<Operation>& ops, Coord move, Direction dir);
+    static std::pair<Coord, Coord> find_first_none(Coord pos, Direction dir, Figure atk_fig);
+    static void find_defs_move_straight_three(Operation& op, Coord center, Direction dir);
+    static void find_defs_move_broken_four(Operation& op, Coord center, Direction dir);
+    static void find_ops_straight_two(std::vector<Operation>& ops, Coord move, Direction dir);
+    static void find_ops_broken_three(std::vector<Operation>& ops, Coord move, Direction dir);
+    static void find_ops_straight_three(std::vector<Operation>& ops, Coord move, Direction dir);
+    static void find_ops_broken_four(std::vector<Operation>& ops, Coord move, Direction dir);
+    static void find_ops_straight_four(std::vector<Operation>& ops, Coord move, Direction dir);
     // void get_operations(Coord c);
 };

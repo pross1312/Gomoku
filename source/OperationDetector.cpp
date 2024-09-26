@@ -4,11 +4,14 @@
 #include <cassert>
 #include <optional>
 
+std::vector<bool> OperationDetector::flags;
+BitBoard* OperationDetector::board;
+
 // NOTE: call reset before doing anything here
 std::vector<Operation> OperationDetector::find_operations(BitBoard* board, Figure atk_fig) {
     assert(IS_PIECE(atk_fig));
-    this->board = board;
-    this->flags.assign(SIZE*SIZE*4, false);
+    OperationDetector::board = board;
+    OperationDetector::flags.assign(SIZE*SIZE*4, false);
     std::vector<Operation> result;
     for (BitBoard::Move move : board->moves) {
         if (move.fig == atk_fig) find_operations(result, move.pos);
@@ -18,16 +21,45 @@ std::vector<Operation> OperationDetector::find_operations(BitBoard* board, Figur
 
 std::vector<Operation> OperationDetector::find_operations(BitBoard* board, Coord atk_move) {
     std::vector<Operation> result;
-    this->board = board;
-    this->flags.assign(SIZE*SIZE*4, false);
+    OperationDetector::board = board;
+    OperationDetector::flags.assign(SIZE*SIZE*4, false);
     find_operations(result, atk_move);
+    return result;
+}
+
+std::vector<Coord> OperationDetector::find_defs(BitBoard* board, Coord atk_move, ThreatType lower_limit) {
+    std::vector<Coord> result;
+    OperationDetector::board = board;
+
+    for (Direction d = HORIZONTAL; d < DIR_COUNT; d += 1) {
+        Operation op;
+        Line line = board->get_line_radius(atk_move, d);
+        switch (ThreatDetector::check(line)) {
+            case Threat::None:
+            case Threat::BrokenTwo:
+            case Threat::StraightTwo:
+            case Threat::BrokenThree:
+            case Threat::StraightFour:
+            case Threat::StraightFive:
+                break;
+            case Threat::StraightThree:
+                if (lower_limit <= Threat::StraightThree) find_defs_move_straight_three(op, atk_move, d);
+                break;
+            case Threat::BrokenFour:
+                if (lower_limit <= Threat::BrokenFour) find_defs_move_broken_four(op, atk_move, d);
+                break;
+        }
+        if (op.defs[0].is_valid()) result.push_back(op.defs[0]);
+        if (op.defs[1].is_valid()) result.push_back(op.defs[1]);
+        if (op.defs[2].is_valid()) result.push_back(op.defs[2]);
+    }
     return result;
 }
 
 std::vector<Operation> OperationDetector::find_operations(BitBoard* board, Coord atk_move, Direction dir) {
     std::vector<Operation> result;
-    this->board = board;
-    this->flags.assign(SIZE*SIZE*4, false);
+    OperationDetector::board = board;
+    OperationDetector::flags.assign(SIZE*SIZE*4, false);
 
     set_flag(atk_move, dir);
     Line line = board->get_line_radius(atk_move, dir);
@@ -292,14 +324,13 @@ void OperationDetector::find_ops_broken_three(std::vector<Operation>& ops, Coord
 void OperationDetector::set_flag(Coord move, Direction dir) {
     assert(move.is_valid());
     size_t index = (size_t)move.row*SIZE + move.col;
-    flags[index + dir*SIZE*SIZE] = true;
+    OperationDetector::flags[index + dir*SIZE*SIZE] = true;
 }
 
 bool OperationDetector::get_flag(Coord move, Direction dir) {
     assert(move.is_valid());
     size_t index = (size_t)move.row*SIZE + move.col;
-    count += flags[index + dir*SIZE*SIZE];
-    return flags[index + dir*SIZE*SIZE];
+    return OperationDetector::flags[index + dir*SIZE*SIZE];
 }
 
 // return [left (pos -.. dir), right (pos +.. dir)]

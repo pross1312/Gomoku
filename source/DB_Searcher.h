@@ -53,7 +53,6 @@ struct DB_Searcher {
     bool tree_size_growed;
     BitBoard* board;
     DB_NodePtr root;
-    OperationDetector detector;
     Figure atk_fig;
     std::vector<DB_NodePtr> nodes;
 

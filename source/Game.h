@@ -23,4 +23,7 @@ struct Game {
     void add_move(Coord pos);
     void pop_last_move();
     bool check_win(Coord pos) const;
+
+    bool save_state(const char* file_path);
+    bool load_state(const char* file_path);
 };

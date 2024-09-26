@@ -68,6 +68,12 @@ void Game::run() {
             }
         }
 
+        if (IsKeyPressed(KEY_S)) {
+            save_state(".last_state");
+        } else if (IsKeyPressed(KEY_L)) {
+            load_state(".last_state");
+        }
+
         if (!is_game_end) {
             auto opt_move = get_next_move();
             if (opt_move.has_value()) {
@@ -164,4 +170,41 @@ bool Game::check_win(Coord pos) const {
            ThreatDetector::check(lines[VERTICAL])      == Threat::StraightFive ||
            ThreatDetector::check(lines[DIAGONAL]) == Threat::StraightFive ||
            ThreatDetector::check(lines[SUBDIAGONAL])  == Threat::StraightFive;
+}
+
+bool Game::save_state(const char* file_path) {
+    FILE* f = fopen(file_path, "wb");
+    if (f == NULL) {
+        TraceLog(LOG_INFO, "Can't save board state to `%s`", file_path);
+        return false;
+    }
+    size_t move_count = this->board.moves.size();
+    fwrite(&move_count, sizeof(move_count), 1, f);
+    fwrite(this->board.moves.data(), sizeof(*this->board.moves.data()), this->board.moves.size(), f);
+    fwrite(&turn, sizeof(turn), 1, f);
+    fwrite(&is_game_end, sizeof(is_game_end), 1, f);
+    fclose(f);
+    return true;
+}
+
+bool Game::load_state(const char* file_path) {
+    this->board.clear();
+
+    FILE* f = fopen(file_path, "rb");
+    if (f == NULL) {
+        TraceLog(LOG_INFO, "Can't save board state to `%s`", file_path);
+        return false;
+    }
+    size_t move_count = 0;
+    fread(&move_count, sizeof(move_count), 1, f);
+    this->board.moves.resize(move_count);
+    fread(this->board.moves.data(), sizeof(*this->board.moves.data()), move_count, f);
+    fread(&turn, sizeof(turn), 1, f);
+    fread(&is_game_end, sizeof(is_game_end), 1, f);
+    fclose(f);
+
+    for (auto& move : this->board.moves) {
+        this->board.set_cell(move.pos, move.fig);
+    }
+    return true;
 }

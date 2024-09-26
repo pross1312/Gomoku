@@ -15,6 +15,7 @@ struct Engine {
 
     Coord next_move(BitBoard* board, Figure atk_fig);
     Coord search();
+    static size_t count_immediate_threat(BitBoard* board, Coord pos, Figure fig);
     static uint32_t move_value(BitBoard* board, Coord pos, Figure atk_fig);
     std::vector<Coord> get_move_list();
 };

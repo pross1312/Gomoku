@@ -37,10 +37,10 @@ void DB_Searcher::dependency_stage(DB_NodePtr node, size_t level) {
 
         std::vector<Operation> ops;
         if (node == this->root) {
-            this->detector.find_operations(this->board, this->atk_fig).swap(ops);
+            OperationDetector::find_operations(this->board, this->atk_fig).swap(ops);
         } else {
             assert(node->op != INVALID_OP);
-            this->detector.find_operations(this->board, node->op.atk).swap(ops);
+            OperationDetector::find_operations(this->board, node->op.atk).swap(ops);
         }
 
         this->tree_size_growed |= ops.size() > 0;
@@ -74,7 +74,6 @@ void DB_Searcher::dependency_stage(DB_NodePtr node, size_t level) {
 }
 
 void DB_Searcher::combination_stage(size_t level) {
-    assert(true && "Umimplemented");
     for (int i = this->nodes.size()-1; i > 0; i--) {
         DB_NodePtr comb_node = this->nodes[i];
         if (comb_node->level + 1 == level && comb_node->op.type < Threat::StraightFour && play_threat_sequence(comb_node)) {
@@ -89,7 +88,7 @@ void DB_Searcher::combination_stage(size_t level) {
                                     distance.col == 0             ? VERTICAL   :
                                     distance.col*distance.row < 0 ? DIAGONAL   : SUBDIAGONAL;
 
-                    auto ops = this->detector.find_operations(this->board, comb_node->op.atk, dir);
+                    auto ops = OperationDetector::find_operations(this->board, comb_node->op.atk, dir);
                     this->tree_size_growed |= ops.size() > 0;
 
                     for (const auto& op : ops) {
@@ -110,7 +109,7 @@ void DB_Searcher::combination_stage(size_t level) {
                     remove_threat_sequence(node_2);
 
                 } else if (comb_node->op.atk == node_2->op.atk && node_2->parent.first == this->root) {
-                    auto ops = this->detector.find_operations(this->board, node_2->op.atk, node_2->op.dir);
+                    auto ops = OperationDetector::find_operations(this->board, node_2->op.atk, node_2->op.dir);
                     this->tree_size_growed |= ops.size() > 0;
 
                     for (const auto& op : ops) {
@@ -119,7 +118,7 @@ void DB_Searcher::combination_stage(size_t level) {
                             op,
                             comb_node,
                             level,
-                            comb_node->depth + node_2->depth + 1
+                            comb_node->depth + 1
                         );
                         update_best_result(comb_node, child);
                         this->nodes.push_back(child);

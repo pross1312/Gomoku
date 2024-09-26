@@ -3,6 +3,18 @@
 #include "ThreatDetector.h"
 #include <algorithm>
 #include <cmath>
+#include <chrono>
+using namespace std;
+using namespace std::chrono;
+
+inline static high_resolution_clock _clock;
+inline static time_point _start = _clock.now();
+
+#define START_TIMER _start = _clock.now();
+#define PRINT_ELAPSE(msg) do { \
+    duration<double, ratio<1, 1>> diff = _clock.now() - _start; \
+    TraceLog(LOG_INFO, "["#msg"] Time: %f", diff.count()); \
+} while(false);
 
 Coord Engine::next_move(BitBoard* board, Figure atk_fig) {
     if (board->moves.size() == 0) {
@@ -58,6 +70,17 @@ Coord Engine::search() {
         return Engine::move_value(this->board, x, this->atk_fig) > Engine::move_value(this->board, y, this->atk_fig);
     });
     return move_list[0];
+}
+
+size_t Engine::count_immediate_threat(BitBoard* board, Coord pos, Figure fig) {
+    Figure old = board->get_cell(pos);
+    board->set_cell(pos, fig);
+    Line4 lines = board->get_lines_radius(pos);
+    board->set_cell(pos, old);
+    return  (ThreatDetector::check(lines[HORIZONTAL])  >= Threat::BrokenFour) +
+            (ThreatDetector::check(lines[VERTICAL])    >= Threat::BrokenFour) +
+            (ThreatDetector::check(lines[DIAGONAL])    >= Threat::BrokenFour) +
+            (ThreatDetector::check(lines[SUBDIAGONAL]) >= Threat::BrokenFour);
 }
 
 uint32_t Engine::move_value(BitBoard* board, Coord pos, Figure atk_fig) {
