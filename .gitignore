@@ -1,3 +1,4 @@
 .cache
+.last_state
 gomoku
 build/
