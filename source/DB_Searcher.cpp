@@ -20,9 +20,6 @@ SearchResult DB_Searcher::search(BitBoard* b, Figure atk_fig) {
         dependency_stage(this->root, level);
         combination_stage(level);
     }
-    // log_tree(this->root);
-    // TraceLog(LOG_INFO, "Best threat found: %s", this->root->best_child == nullptr ? "None" : Threat::to_text(this->root->best_child->op.type));
-    // log_best_threat_sequence();
     return this->root->best_res;
 }
 
@@ -134,15 +131,18 @@ void DB_Searcher::combination_stage(size_t level) {
 
 bool DB_Searcher::update_best_result(DB_NodePtr node, DB_NodePtr child) {
     SearchResult child_res = IS_INVALID_RES(child->best_res) ?
-        SearchResult{.coord = child->op.atk, .threat = child->op.type, .depth = child->depth} :
+        SearchResult{.node = nullptr, .threat = child->op.type, .depth = child->depth} :
         child->best_res;
     if (IS_INVALID_RES(node->best_res) || child_res.threat > node->best_res.threat ||
-       (child_res.threat == node->best_res.threat && child_res.threat == Threat::StraightFive && child_res.depth < node->best_res.depth) ||
-       (child_res.threat == node->best_res.threat && Engine::move_value(this->board, child->op.atk, this->atk_fig) > Engine::move_value(this->board, node->best_res.coord, this->atk_fig)))
+       (child_res.threat == node->best_res.threat &&
+            child_res.threat == Threat::StraightFive && child_res.depth < node->best_res.depth) ||
+       (child_res.threat == node->best_res.threat &&
+            Engine::move_value(this->board, child->op.atk, this->atk_fig) >
+            Engine::move_value(this->board, node->best_res.node->op.atk, this->atk_fig)))
     {
         node->best_res.depth = child_res.depth;
         node->best_res.threat = child_res.threat;
-        node->best_res.coord = child->op.atk;
+        node->best_res.node = child;
         return true;
     }
     return false;

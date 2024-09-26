@@ -19,11 +19,14 @@ typedef std::shared_ptr<DB_Node> DB_NodePtr;
 #define LOG_NODE(node) TraceLog(LOG_INFO, NODE_FORMAT, FORMAT_NODE(node))
 
 struct SearchResult {
-    Coord coord;
+    DB_NodePtr node;
     ThreatType threat;
     size_t depth;
 };
-#define IS_INVALID_RES(res) ((res).coord == INVALID_COORD)
+#define LOG_RESULT(fig, res) TraceLog(LOG_INFO, #fig": "COORD_FORMAT" to get %s after %zu moves.",\
+                FORMAT_COORD((res).node->op.atk), Threat::to_text((res).threat), (res).depth)
+
+#define IS_INVALID_RES(res) ((res).node == nullptr)
 struct DB_Node {
     enum Type : uint8_t {
         Dependency,

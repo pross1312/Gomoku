@@ -36,32 +36,52 @@ Coord Engine::search() {
     SearchResult def_res = db_searcher.search(board, OPPOSITE_FIG(atk_fig));
     TraceLog(LOG_INFO, "------------------------------");
     if (!IS_INVALID_RES(atk_res)) {
-        TraceLog(LOG_INFO, "White: "COORD_FORMAT" to get %s after %zu moves.",
-                FORMAT_COORD(atk_res.coord), Threat::to_text(atk_res.threat), atk_res.depth);
+        LOG_RESULT("White", atk_res);
     } else {
         TraceLog(LOG_INFO, "White: no threat");
     }
     if (!IS_INVALID_RES(def_res)) {
-        TraceLog(LOG_INFO, "Black: "COORD_FORMAT" to get %s after %zu moves.",
-                FORMAT_COORD(def_res.coord), Threat::to_text(def_res.threat), def_res.depth);
+        LOG_RESULT("Black", def_res);
     } else {
         TraceLog(LOG_INFO, "Black: no threat");
     }
-    if (!IS_INVALID_RES(def_res) && def_res.threat == Threat::StraightFive && def_res.depth <= 3) {
-        if (!IS_INVALID_RES(atk_res) && atk_res.threat >= Threat::StraightFour) {
-            this->board->set_cell(def_res.coord, OPPOSITE_FIG(this->atk_fig));
-            Line4 lines = this->board->get_lines_radius(def_res.coord);
-            this->board->set_cell(def_res.coord, Figure::None);
-            if (ThreatDetector::check(lines[HORIZONTAL]) < Threat::BrokenFour && 
-                ThreatDetector::check(lines[VERTICAL]) < Threat::BrokenFour &&
-                ThreatDetector::check(lines[DIAGONAL]) < Threat::BrokenFour &&
-                ThreatDetector::check(lines[SUBDIAGONAL]) < Threat::BrokenFour) {
-                return atk_res.coord;
+    if (!IS_INVALID_RES(def_res) && def_res.threat == Threat::StraightFive) {
+        if (!IS_INVALID_RES(atk_res) && atk_res.threat == Threat::StraightFive) {
+            if (atk_res.node->op.type == Threat::StraightFive) {
+                return atk_res.node->op.atk;
+            } else if (def_res.node->op.type == Threat::StraightFive) {
+                return def_res.node->op.atk;
+            } else if (atk_res.node->op.type == Threat::StraightFour) {
+                return atk_res.node->op.atk;
+            }
+
+            size_t atk_i_threat = count_immediate_threat(this->board, atk_res.node->op.atk, this->atk_fig);
+            if (atk_i_threat >= 2) return atk_res.node->op.atk;
+            else if (atk_i_threat == 1) {
+                auto def_moves = OperationDetector::find_defs(this->board, atk_res.node->op.atk, Threat::BrokenFour);
+                ThreatType best_def_move_threat = Threat::None;
+                for (auto pos : def_moves) {
+                    ThreatType threat = best_threat(this->board, pos, OPPOSITE_FIG(this->atk_fig));
+                    if (threat >= Threat::BrokenFour) {
+                        return def_res.node->op.atk;
+                    }
+                    best_def_move_threat = std::max(best_def_move_threat, threat);
+                }
+                if (best_def_move_threat == Threat::StraightThree &&
+                    count_threat(this->board, atk_res.node->op.atk, this->atk_fig) < 2) {
+                    return def_res.node->op.atk;
+                }
+                return atk_res.node->op.atk;
+            } else {
+                size_t def_i_threat = count_immediate_threat(this->board, def_res.node->op.atk, OPPOSITE_FIG(this->atk_fig));
+                if (def_i_threat == 0) {
+                    return atk_res.node->op.atk;
+                }
             }
         }
-        return def_res.coord;
+        return def_res.node->op.atk;
     } else if (!IS_INVALID_RES(atk_res) && atk_res.threat >= Threat::StraightFour) {
-        return atk_res.coord;
+        return atk_res.node->op.atk;
     }
     TraceLog(LOG_INFO, "Shallow search");
     std::vector<Coord> move_list = get_move_list();
@@ -70,6 +90,28 @@ Coord Engine::search() {
         return Engine::move_value(this->board, x, this->atk_fig) > Engine::move_value(this->board, y, this->atk_fig);
     });
     return move_list[0];
+}
+
+ThreatType Engine::best_threat(BitBoard* board, Coord pos, Figure fig) {
+    Figure old = board->get_cell(pos);
+    board->set_cell(pos, fig);
+    Line4 lines = board->get_lines_radius(pos);
+    board->set_cell(pos, old);
+    return (ThreatType)std::max(std::max(ThreatDetector::check(lines[HORIZONTAL]),
+                ThreatDetector::check(lines[VERTICAL])),
+             std::max(ThreatDetector::check(lines[DIAGONAL]),
+                ThreatDetector::check(lines[SUBDIAGONAL])));
+}
+
+size_t Engine::count_threat(BitBoard* board, Coord pos, Figure fig) {
+    Figure old = board->get_cell(pos);
+    board->set_cell(pos, fig);
+    Line4 lines = board->get_lines_radius(pos);
+    board->set_cell(pos, old);
+    return  (ThreatDetector::check(lines[HORIZONTAL])  >= Threat::StraightThree) +
+            (ThreatDetector::check(lines[VERTICAL])    >= Threat::StraightThree) +
+            (ThreatDetector::check(lines[DIAGONAL])    >= Threat::StraightThree) +
+            (ThreatDetector::check(lines[SUBDIAGONAL]) >= Threat::StraightThree);
 }
 
 size_t Engine::count_immediate_threat(BitBoard* board, Coord pos, Figure fig) {

@@ -50,18 +50,16 @@ void Game::run() {
             TraceLog(LOG_INFO, "------------------------------");
             if (board.moves.size() > 0) {
                 SearchResult res = searcher.search(&board, Figure::White);
-                if (res.coord != INVALID_COORD) {
-                    TraceLog(LOG_INFO, "White: "COORD_FORMAT" to get %s after %zu moves.",
-                            FORMAT_COORD(res.coord), Threat::to_text(res.threat), res.depth);
+                if (IS_INVALID_RES(res)) {
+                    LOG_RESULT("Black", res);
                 } else {
                     TraceLog(LOG_INFO, "White: no threat");
                 }
             }
             if (board.moves.size() > 0) {
                 SearchResult res = searcher.search(&board, Figure::Black);
-                if (res.coord != INVALID_COORD) {
-                    TraceLog(LOG_INFO, "Black: "COORD_FORMAT" to get %s after %zu moves.",
-                            FORMAT_COORD(res.coord), Threat::to_text(res.threat), res.depth);
+                if (IS_INVALID_RES(res)) {
+                    LOG_RESULT("Black", res);
                 } else {
                     TraceLog(LOG_INFO, "Black: no threat");
                 }
