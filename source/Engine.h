@@ -9,7 +9,7 @@
 struct Engine {
     BitBoard* board;
     Figure atk_fig;
-    std::unordered_map<std::array<uint32_t, SIZE>, std::pair<Coord, uint32_t>, ArrayHasher> cache;
+    // std::unordered_map<std::array<uint32_t, SIZE>, std::pair<Coord, uint32_t>, ArrayHasher> cache;
     DB_Searcher db_searcher;
     size_t cache_hit;
 

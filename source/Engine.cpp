@@ -24,7 +24,7 @@ Coord Engine::next_move(BitBoard* board, Figure atk_fig) {
     }
     this->board = board;
     this->atk_fig = atk_fig;
-    this->cache.clear();
+    // this->cache.clear();
     this->cache_hit = 0;
 
     Coord result = search();
