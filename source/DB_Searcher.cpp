@@ -2,8 +2,7 @@
 #include "Engine.h"
 #include <cmath>
 
-constexpr size_t MAX_LEVEL = 100;
-SearchResult DB_Searcher::search(BitBoard* b, Figure atk_fig) {
+SearchResult DB_Searcher::search(BitBoard* b, Figure atk_fig, size_t limit) {
     this->tree_size_growed = true;
     this->board = b;
     this->atk_fig = atk_fig;
@@ -15,7 +14,7 @@ SearchResult DB_Searcher::search(BitBoard* b, Figure atk_fig) {
     );
     this->nodes.clear();
 
-    for (size_t level = 1; this->tree_size_growed && level < MAX_LEVEL; level += 1) {
+    for (size_t level = 1; this->tree_size_growed && level <= limit; level += 1) {
         this->tree_size_growed = false;
         dependency_stage(this->root, level);
         combination_stage(level);

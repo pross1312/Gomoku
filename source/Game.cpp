@@ -44,6 +44,11 @@ void Game::run() {
             if (opt_fig.has_value()) {
                 print_value(opt_fig.value());
                 TraceLog(LOG_INFO, "Move value %zu", Engine::move_value(&this->board, opt_fig.value(), this->board.get_cell(opt_fig.value())));
+                if (Engine::count_immediate_threat(&this->board, opt_fig.value(), Figure::White) > 0) {
+                    for (auto pos : OperationDetector::find_defs(&this->board, opt_fig.value(), Threat::BrokenFour)) {
+                        LOG_COORD(pos);
+                    }
+                }
             }
         }
         if (IsKeyPressed(KEY_SPACE)) {
@@ -83,18 +88,18 @@ void Game::run() {
                         turn = Turn::Black;
                         add_move(opt_move.value());
                     }
-                } else {
+                } else if (this->board.get_cell(opt_move.value()) == Figure::None) {
                     add_move(opt_move.value());
-                }
-                if (mode == Game::Mode::Bot || mode == Game::Mode::Pvp) {
-                    if (check_win(opt_move.value())) {
-                        TraceLog(LOG_INFO, "Player %s win!!!", turn == Turn::White ? "White" : "Black");
-                        is_game_end = true;
-                    } else if (board.moves.size() == SIZE*SIZE) {
-                        TraceLog(LOG_INFO, "Game draw!");
-                        is_game_end = true;
-                    } else {
-                        switch_turn();
+                    if (mode == Game::Mode::Bot || mode == Game::Mode::Pvp) {
+                        if (check_win(opt_move.value())) {
+                            TraceLog(LOG_INFO, "Player %s win!!!", turn == Turn::White ? "White" : "Black");
+                            is_game_end = true;
+                        } else if (board.moves.size() == SIZE*SIZE) {
+                            TraceLog(LOG_INFO, "Game draw!");
+                            is_game_end = true;
+                        } else {
+                            switch_turn();
+                        }
                     }
                 }
             }

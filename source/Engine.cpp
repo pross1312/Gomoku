@@ -16,6 +16,8 @@ inline static time_point _start = _clock.now();
     TraceLog(LOG_INFO, "["#msg"] Time: %f", diff.count()); \
 } while(false);
 
+constexpr uint32_t RANDOM_THRESHOLD = 100;
+
 Coord Engine::next_move(BitBoard* board, Figure atk_fig) {
     if (board->moves.size() == 0) {
         return Coord(SIZE/2, SIZE/2);
@@ -32,8 +34,12 @@ Coord Engine::next_move(BitBoard* board, Figure atk_fig) {
 }
 
 Coord Engine::search() {
-    SearchResult atk_res = db_searcher.search(board, atk_fig);
-    SearchResult def_res = db_searcher.search(board, OPPOSITE_FIG(atk_fig));
+START_TIMER
+    SearchResult atk_res = db_searcher.search(board, atk_fig, 5);
+PRINT_ELAPSE("White search time")
+START_TIMER
+    SearchResult def_res = db_searcher.search(board, OPPOSITE_FIG(atk_fig), 2);
+PRINT_ELAPSE("Black search time")
     TraceLog(LOG_INFO, "------------------------------");
     if (!IS_INVALID_RES(atk_res)) {
         LOG_RESULT("White", atk_res);
@@ -58,7 +64,10 @@ Coord Engine::search() {
             size_t atk_i_threat = count_immediate_threat(this->board, atk_res.node->op.atk, this->atk_fig);
             if (atk_i_threat >= 2) return atk_res.node->op.atk;
             else if (atk_i_threat == 1) {
+                this->board->set_cell(atk_res.node->op.atk, this->atk_fig);
                 auto def_moves = OperationDetector::find_defs(this->board, atk_res.node->op.atk, Threat::BrokenFour);
+                this->board->set_cell(atk_res.node->op.atk, Figure::None);
+
                 ThreatType best_def_move_threat = Threat::None;
                 for (auto pos : def_moves) {
                     ThreatType threat = best_threat(this->board, pos, OPPOSITE_FIG(this->atk_fig));
@@ -75,6 +84,16 @@ Coord Engine::search() {
             } else {
                 size_t def_i_threat = count_immediate_threat(this->board, def_res.node->op.atk, OPPOSITE_FIG(this->atk_fig));
                 if (def_i_threat == 0) {
+                    this->board->set_cell(atk_res.node->op.atk, this->atk_fig);
+                    auto def_moves = OperationDetector::find_defs(this->board, atk_res.node->op.atk, Threat::BrokenFour);
+                    this->board->set_cell(atk_res.node->op.atk, Figure::None);
+
+                    for (auto pos : def_moves) {
+                        ThreatType threat = best_threat(this->board, pos, OPPOSITE_FIG(this->atk_fig));
+                        if (threat >= Threat::BrokenFour) {
+                            return def_res.node->op.atk;
+                        }
+                    }
                     return atk_res.node->op.atk;
                 }
             }
@@ -89,6 +108,15 @@ Coord Engine::search() {
     std::sort(move_list.begin(), move_list.end(), [this](Coord x, Coord y) {
         return Engine::move_value(this->board, x, this->atk_fig) > Engine::move_value(this->board, y, this->atk_fig);
     });
+    uint32_t best_move_value = Engine::move_value(this->board, move_list[0], this->atk_fig); 
+    if (best_move_value > RANDOM_THRESHOLD) {
+        for (size_t i = 0; i < move_list.size(); i++) {
+            if (best_move_value - Engine::move_value(this->board, move_list[i], this->atk_fig) > RANDOM_THRESHOLD) {
+                TraceLog(LOG_INFO, "Random move between: [0, %zu]", i-1);
+                return move_list[std::rand()%i];
+            }
+        }
+    }
     return move_list[0];
 }
 

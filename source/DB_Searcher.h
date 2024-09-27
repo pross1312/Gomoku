@@ -50,6 +50,7 @@ struct DB_Node {
         type{type}, op{op}, parent{parent_1, parent_2}, level{level}, depth{depth} {}
 };
 
+constexpr size_t MAX_LEVEL = 5;
 struct DB_Searcher {
     static const SearchResult INVALID_RESULT;
 
@@ -62,7 +63,7 @@ struct DB_Searcher {
     void log_tree(const DB_NodePtr& node);
     void log_best_threat_sequence();
 
-    SearchResult search(BitBoard* board, Figure atk_fig);
+    SearchResult search(BitBoard* board, Figure atk_fig, size_t limit = MAX_LEVEL);
     void dependency_stage(DB_NodePtr node, size_t level);
     void combination_stage(size_t level);
 
