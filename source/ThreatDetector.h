@@ -44,8 +44,8 @@ struct ThreatDetector {
     static ThreatType detect(uint32_t line);
     static ThreatType check(uint32_t line);
 
-    static uint32_t atk_value(ThreatType threat);
-    static uint32_t def_value(ThreatType threat);
+    static int64_t atk_value(ThreatType threat);
+    static int64_t def_value(ThreatType threat);
     static uint32_t threshold();
 
     static bool is_broken_two(std::array<Figure, THREAT_RANGE> &line, Figure figure);

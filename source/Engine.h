@@ -20,6 +20,6 @@ struct Engine {
     static size_t count_threat(BitBoard* board, Coord pos, Figure fig);
     static ThreatType best_threat(BitBoard* board, Coord pos, Figure fig);
 
-    static uint32_t move_value(BitBoard* board, Coord pos, Figure atk_fig);
+    static int64_t move_value(BitBoard* board, Coord pos, Figure atk_fig);
     std::vector<Coord> get_move_list();
 };
