@@ -41,11 +41,12 @@ struct ThreatDetector {
         ThreatType operator[](size_t i) const { return table[i]; }
     };
 
-    static ThreatType detect(uint32_t line);
-    static ThreatType check(uint32_t line);
+    static std::array<ThreatType, DIR_COUNT> check(Line4 lines);
+    static ThreatType check(Line line);
+    static ThreatType detect(Line line);
 
-    static uint32_t atk_value(ThreatType threat);
-    static uint32_t def_value(ThreatType threat);
+    static int64_t atk_value(ThreatType threat);
+    static int64_t def_value(ThreatType threat);
     static uint32_t threshold();
 
     static bool is_broken_two(std::array<Figure, THREAT_RANGE> &line, Figure figure);

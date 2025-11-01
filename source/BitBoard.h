@@ -63,6 +63,7 @@ enum Figure : uint8_t {
     White = 0b10,
     None = 0b11,
 };
+#define FIG_STR(figure) ((figure) == Figure::White ? "white" : ((figure) == Figure::Black ? "black" : "none"))
 #define IS_PIECE(figure) ((figure) != Figure::None && (figure) != Figure::Out)
 #define OPPOSITE_FIG(_cell) ((_cell) == Figure::White ? Figure::Black : (_cell) == Figure::None ? Figure::None : Figure::White)
 #define INVALID_COORD (Coord{})
@@ -97,8 +98,6 @@ struct Coord {
 };
 
 typedef uint32_t Line;
-typedef std::array<Line, 4> Line4;
-typedef size_t Direction;
 enum : size_t {
     HORIZONTAL = 0,
     VERTICAL,
@@ -106,6 +105,8 @@ enum : size_t {
     SUBDIAGONAL,
     DIR_COUNT,
 };
+typedef std::array<Line, DIR_COUNT> Line4;
+typedef size_t Direction;
 const Coord DIR_VECS[DIR_COUNT] {
     [HORIZONTAL] = Coord(0, 1),
     [VERTICAL] = Coord(1, 0),
@@ -126,13 +127,15 @@ struct BitBoard {
     void clear();
     Move pop_move();
 
+    bool has_move_left() const;
+
     Figure get_cell(size_t row, size_t col) const;
     Figure get_cell(Coord coord) const { return get_cell((size_t)coord.row, (size_t)coord.col); }
 
     void add_move(size_t row, size_t col, Figure cell);
     void add_move(Coord coord, Figure cell) { add_move((size_t)coord.row, (size_t)coord.col, cell); };
-    void set_cell(size_t row, size_t col, Figure cell);
-    void set_cell(Coord coord, Figure cell) { set_cell((size_t)coord.row, (size_t)coord.col, cell); };
+    Figure set_cell(size_t row, size_t col, Figure cell);
+    Figure set_cell(Coord coord, Figure cell) { return set_cell((size_t)coord.row, (size_t)coord.col, cell); };
 
     Line get_line(size_t row, size_t col, Direction dir) const;
     Line4 get_lines(size_t row, size_t col) const;

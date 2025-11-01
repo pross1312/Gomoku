@@ -20,12 +20,21 @@ ThreatDetector::Cache::Cache() {
     }
 }
 
-ThreatType ThreatDetector::check(uint32_t line) {
+std::array<ThreatType, DIR_COUNT> ThreatDetector::check(Line4 lines) {
+    std::array<ThreatType, DIR_COUNT> result;
+    static_assert(result.size() == lines.size());
+    for (size_t i = 0; i < lines.size(); i++) {
+        result[i] = ThreatDetector::check(lines[i]);
+    }
+    return result;
+}
+
+ThreatType ThreatDetector::check(Line line) {
     assert(line < CACHE_SIZE && "Out of bound");
     return cache[line];
 }
 
-ThreatType ThreatDetector::detect(uint32_t line) {
+ThreatType ThreatDetector::detect(Line line) {
     std::array<Figure, THREAT_RANGE> cells;
     for (size_t i = 0; i < THREAT_RANGE; i++) {
         cells[i] = Figure((line >> 2*(THREAT_RANGE-1-i)) & 0b11);
@@ -42,31 +51,31 @@ ThreatType ThreatDetector::detect(uint32_t line) {
     return Threat::None;
 }
 
-uint32_t ThreatDetector::atk_value(ThreatType threat) {
+int64_t ThreatDetector::atk_value(ThreatType threat) {
     switch (threat) {
         case Threat::None: return 0;
-        case Threat::BrokenTwo: return 5;
-        case Threat::StraightTwo: return 30;
-        case Threat::BrokenThree: return 60;
-        case Threat::StraightThree: return 300;
-        case Threat::BrokenFour: return 400;
-        case Threat::StraightFour: return 1000;
-        case Threat::StraightFive: return 10000;
+        case Threat::BrokenTwo: return 3;
+        case Threat::StraightTwo: return 20;
+        case Threat::BrokenThree: return 100;
+        case Threat::StraightThree: return 110;
+        case Threat::BrokenFour: return 120;
+        case Threat::StraightFour: return 999999;
+        case Threat::StraightFive: return 99999999999;
     }
     assert(false && "Unknown threat");
     return 0;
 }
 
-uint32_t ThreatDetector::def_value(ThreatType threat) {
+int64_t ThreatDetector::def_value(ThreatType threat) {
     switch (threat) {
         case Threat::None: return 0;
-        case Threat::BrokenTwo: return 5;
+        case Threat::BrokenTwo: return 2;
         case Threat::StraightTwo: return 10;
-        case Threat::BrokenThree: return 20;
+        case Threat::BrokenThree: return 90;
         case Threat::StraightThree: return 100;
-        case Threat::BrokenFour: return 100;
-        case Threat::StraightFour: return 700;
-        case Threat::StraightFive: return 5000;
+        case Threat::BrokenFour: return 110;
+        case Threat::StraightFour: return 999999;
+        case Threat::StraightFive: return 99999999999;
     }
     assert(false && "Unknown threat");
     return 0;

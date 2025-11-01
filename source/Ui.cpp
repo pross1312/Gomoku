@@ -13,6 +13,28 @@ void Ui::set_bound(Rectangle new_bound) {
     padding = square_size/10.0f;
 }
 
+void Ui::render_win(const BitBoard &board, Figure turn)
+{
+    this->render_board(board);
+    this->render_overlay_with_text(TextFormat("Player %s win!", turn == Figure::White ? "white" : "black"));
+}
+
+void Ui::render_draw(const BitBoard &board)
+{
+    this->render_board(board);
+    this->render_overlay_with_text("Game draw!");
+}
+
+void Ui::render_overlay_with_text(const char* text)
+{
+    DrawRectangleRec(this->board_bound, OVERLAY_COLOR);
+    const auto text_width = MeasureText(text, font_size);
+    DrawText(text,
+             this->board_bound.x + (this->board_bound.width - text_width)/2,
+             this->board_bound.y + (this->board_bound.height - font_size)/2,
+             font_size, TEXT_HIGHLIGHT_COLOR);
+}
+
 void Ui::render_board(const BitBoard &board) {
     Vector2 mouse = GetMousePosition();
     for (size_t i = 0; i < SIZE; i++) {
@@ -96,7 +118,7 @@ void Ui::render_line(uint32_t line) {
     printf("\n");
 }
 
-std::optional<Coord> Ui::get_cell_at_pos(Vector2 pos) {
+Coord Ui::get_cell_at_pos(Vector2 pos) {
     Rectangle real_bound {
         .x = board_bound.x,
         .y = board_bound.y,
@@ -105,7 +127,7 @@ std::optional<Coord> Ui::get_cell_at_pos(Vector2 pos) {
     };
     int col = (pos.x - real_bound.x)/square_size;
     int row = (pos.y - real_bound.y)/square_size;
-    if (col < 0 || col >= SIZE || row < 0 || row >= SIZE) return std::nullopt;
+    if (col < 0 || col >= SIZE || row < 0 || row >= SIZE) return INVALID_COORD;
     Rectangle rec {
         .x = real_bound.x + col*square_size + padding,
         .y = real_bound.y + row*square_size + padding,
@@ -114,5 +136,5 @@ std::optional<Coord> Ui::get_cell_at_pos(Vector2 pos) {
     };
     bool mouse_in_cell = pos.x > rec.x && pos.x < rec.x + rec.width && pos.y > rec.y && pos.y < rec.y + rec.height;
     if (mouse_in_cell) return Coord((size_t)row, (size_t)col);
-    return std::nullopt;
+    return INVALID_COORD;
 }

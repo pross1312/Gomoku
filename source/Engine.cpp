@@ -153,7 +153,7 @@ size_t Engine::count_immediate_threat(BitBoard* board, Coord pos, Figure fig) {
             (ThreatDetector::check(lines[SUBDIAGONAL]) >= Threat::BrokenFour);
 }
 
-uint32_t Engine::move_value(BitBoard* board, Coord pos, Figure atk_fig) {
+int64_t Engine::move_value(BitBoard* board, Coord pos, Figure atk_fig) {
     Figure old_fig = board->get_cell(pos);
     board->set_cell(pos, atk_fig);
     Line4 atk_lines = board->get_lines_radius(pos);

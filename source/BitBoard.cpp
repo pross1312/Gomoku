@@ -31,6 +31,11 @@ BitBoard::Move BitBoard::pop_move() {
     return result;
 }
 
+bool BitBoard::has_move_left() const
+{
+    return this->moves.size() < SIZE * SIZE;
+}
+
 Figure BitBoard::get_cell(size_t row, size_t col) const {
     assert(row < SIZE && col < SIZE && "Out of bound");
     return Figure((h_lines[row] >> 2*(SIZE-1 - col)) & 0b11);
@@ -38,25 +43,19 @@ Figure BitBoard::get_cell(size_t row, size_t col) const {
 
 void BitBoard::add_move(size_t row, size_t col, Figure cell) {
     assert(IS_PIECE(cell));
-    if (get_cell(row, col) != Figure::None) {
-        for (Move& move : moves) {
-            if ((size_t)move.pos.row == row && (size_t)move.pos.col == col) {
-                move.fig = cell;
-                break;
-            }
-        }
-    } else {
-        moves.push_back(Move{
-            .pos = Coord(row, col),
-            .fig = cell,
-        });
-    }
+    assert(get_cell(row, col) == Figure::None);
+    moves.push_back(Move{
+        .pos = Coord(row, col),
+        .fig = cell,
+    });
     set_cell(row, col, cell);
 }
 
-void BitBoard::set_cell(size_t row, size_t col, Figure cell) {
+Figure BitBoard::set_cell(size_t row, size_t col, Figure cell) {
     assert(cell != Figure::Out && "Invalid cell");
     assert(row < SIZE && col < SIZE && "Out of bound");
+
+    auto result = get_cell(row, col);
 
     static const auto set = [](size_t right_gap, Line *line, Figure c) {
         *line |= (0b11 << 2*right_gap);
@@ -71,6 +70,8 @@ void BitBoard::set_cell(size_t row, size_t col, Figure cell) {
     right_out_gap = row > col ? row - col : 0;
     right_pieces = std::min(SIZE-1 - col, SIZE-1 - row);
     set(right_pieces + right_out_gap, &sub_d_lines[(SIZE-1-col) + row], cell);
+
+    return result;
 }
 
 
