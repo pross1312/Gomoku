@@ -16,7 +16,7 @@ inline static time_point _start = _clock.now();
     TraceLog(LOG_INFO, "["#msg"] Time: %f", diff.count()); \
 } while(false);
 
-constexpr int64_t RANDOM_THRESHOLD = 100;
+constexpr int64_t RANDOM_THRESHOLD = 1;
 
 Coord Engine::next_move(BitBoard* board, Figure atk_fig) {
     if (board->moves.size() == 0) {
@@ -35,10 +35,10 @@ Coord Engine::next_move(BitBoard* board, Figure atk_fig) {
 
 Coord Engine::search() {
 START_TIMER
-    SearchResult atk_res = db_searcher.search(board, atk_fig, 6);
+    SearchResult atk_res = db_searcher.search(board, atk_fig, 4);
 PRINT_ELAPSE("White search time")
 START_TIMER
-    SearchResult def_res = db_searcher.search(board, OPPOSITE_FIG(atk_fig), 3);
+    SearchResult def_res = db_searcher.search(board, OPPOSITE_FIG(atk_fig), 4);
 PRINT_ELAPSE("Black search time")
     TraceLog(LOG_INFO, "------------------------------");
     if (!IS_INVALID_RES(atk_res)) {
@@ -109,7 +109,7 @@ PRINT_ELAPSE("Black search time")
         return Engine::move_value(this->board, x, this->atk_fig) > Engine::move_value(this->board, y, this->atk_fig);
     });
     int64_t best_move_value = Engine::move_value(this->board, move_list[0], this->atk_fig); 
-    if (best_move_value > RANDOM_THRESHOLD) {
+    if (best_move_value > 2*RANDOM_THRESHOLD) {
         for (size_t i = 0; i < move_list.size(); i++) {
             if (best_move_value - Engine::move_value(this->board, move_list[i], this->atk_fig) > RANDOM_THRESHOLD) {
                 TraceLog(LOG_INFO, "Random move between: [0, %zu]", i-1);

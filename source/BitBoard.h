@@ -123,6 +123,8 @@ struct BitBoard {
 
     BitBoard();
 
+    bool has_move_left() const;
+
     void clear();
     Move pop_move();
 

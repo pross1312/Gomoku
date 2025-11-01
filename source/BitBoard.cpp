@@ -7,7 +7,13 @@ BitBoard::BitBoard() {
     clear();
 }
 
-void BitBoard::clear() {
+bool BitBoard::has_move_left() const
+{
+    return this->moves.size() < SIZE*SIZE;
+}
+
+void BitBoard::clear()
+{
     this->moves.clear();
     for (Line &line : h_lines) line = (1 << 2*SIZE) - 1;
     for (Line &line : v_lines) line = (1 << 2*SIZE) - 1;

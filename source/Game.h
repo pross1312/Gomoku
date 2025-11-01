@@ -4,24 +4,38 @@
 #include "DB_Searcher.h"
 #include <vector>
 
+enum class GameResult
+{
+    Win,
+    Draw,
+    None,
+};
+enum class GameMode {
+    Pvp,
+    Bot,
+    Custom,
+};
+
 struct Game {
-    enum Mode { Pvp, Bot, Custom } mode;
-    enum Turn { White, Black, } turn;
+    GameMode mode = GameMode::Pvp;
     Ui ui;
     BitBoard board;
     Engine engine;
     DB_Searcher searcher;
     OperationDetector detector;
-    bool is_game_end;
+    GameResult game_result = GameResult::None;
+    Figure current_turn = Figure::White;
+    Figure bot_turn = Figure::White;
 
-    Game(Mode mode);
+    Game(GameMode mode);
 
     void run();
-    std::optional<Coord> get_next_move();
+
+    Coord mode_pvp_move();
+    Coord mode_bot_move();
+    Coord mode_custom_move();
+
     void restart();
-    void switch_turn();
-    void add_move(Coord pos);
-    void pop_last_move();
     bool check_win(Coord pos) const;
 
     bool save_state(const char* file_path);
